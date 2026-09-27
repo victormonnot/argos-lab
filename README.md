@@ -257,6 +257,11 @@ coordinator**, **subgroup coordinators** with predelegated task domains, and
 **peer-to-peer replicas** using a **full-roster round barrier**. Every decision
 uses one local cache, with exact reports sampled before new commands.
 
+The illustrated opening follows the default central run: links cut at `2 s`,
+T3 finishes at `4 s`, and fresh reports return at `8 s`. Four guided questions
+explore retained reservations, delegated domains, the peer barrier and recovery.
+The protocol and nine reference comparisons expand without resetting the run.
+
 1. Select **Central + permanent cut**, then advance to 2 s, separating {C, A1}
    from {A2, A3}. Agents keep executing
    accepted work; report age increases without implying an executor failure.

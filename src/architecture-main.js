@@ -1,6 +1,3 @@
-import './style.css';
-import './mission.css';
-import './architecture.css';
 import { ARCHITECTURES, NETWORKS, NODE_NAMES, MISSION_DT, SERVICE_STEPS, CUT_STEP, RESTORE_STEP, createArchitectureRun, stepArchitecture, resetArchitecture, finishArchitecture, compareArchitectures, networkPartitioned, linkAvailable } from './architecture-model.js';
 import { createMissionView } from './mission-view.js';
 
@@ -56,11 +53,11 @@ for (const mode of ['2d', '3d']) $(`#arch-${mode}`).addEventListener('click', ()
   for (const option of ['2d', '3d']) $(`#arch-${option}`).setAttribute('aria-pressed', String(option === mode));
   $('#arch-view-hint').textContent = mode === '3d'
     ? 'Drag to orbit; scroll to zoom. Whole site / Follow selected changes only the camera. Fixed display height; physical execution and the selected observer’s received knowledge remain separate.'
-    : 'Select an agent to inspect its cache. Map positions do not determine the logical network links.';
+    : 'Select an agent to inspect its cache. ? marks completed work this observer has not learned. Map positions do not determine logical network links.';
 });
 document.querySelectorAll('[data-arch-case]').forEach((button) => button.addEventListener('click', () => {
   configure(...button.dataset.archCase.split(':'));
-  $('#arch-experiment').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#arch-experiment').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
 }));
 $('#arch-comparisons').addEventListener('toggle', () => {
   if (!$('#arch-comparisons').open || $('#arch-comparison-table').children.length) return;
@@ -73,9 +70,9 @@ function renderNetwork() {
   const cut = networkPartitioned(run.initial.network, run.step);
   const links = points.flatMap(([x, y], from) => points.slice(from + 1).map(([x2, y2], offset) => {
     const active = linkAvailable(run.initial.network, run.step, from, from + offset + 1);
-    return `<line x1="${x}" y1="${y}" x2="${x2}" y2="${y2}" stroke="${active ? '#698879' : '#b8b8ad'}" stroke-width="2" ${active ? '' : 'stroke-dasharray="5 5"'} data-active="${active}"/>`;
+    return `<line x1="${x}" y1="${y}" x2="${x2}" y2="${y2}" stroke="${active ? '#8da7b7' : '#b6b8b1'}" stroke-width="2" ${active ? '' : 'stroke-dasharray="5 5"'} data-active="${active}"/>`;
   })).join('');
-  container.innerHTML = `<svg viewBox="0 0 295 185" role="group" aria-label="Logical communication network: ${cut ? 'two disconnected groups' : 'all links active'}">${links}${cut ? '<path d="M148 9V174" stroke="#b67932" stroke-dasharray="3 5"/>' : ''}${points.map(([x, y], node) => `<g role="button" tabindex="0" aria-label="Inspect ${NODE_NAMES[node]}" aria-pressed="${observer === node}" data-observer-node="${node}"><circle cx="${x}" cy="${y}" r="23" fill="${observer === node ? '#204d42' : '#f2f4ec'}" stroke="#49675b"/><text x="${x}" y="${y + 5}" text-anchor="middle" font-size="15" font-family="sans-serif" fill="${observer === node ? 'white' : '#204d42'}">${NODE_NAMES[node]}</text></g>`).join('')}</svg>`;
+  container.innerHTML = `<svg viewBox="0 0 295 185" role="group" aria-label="Logical communication network: ${cut ? 'two disconnected groups' : 'all links active'}">${links}${cut ? '<path d="M148 9V174" stroke="#9b7659" stroke-dasharray="3 5"/>' : ''}${points.map(([x, y], node) => `<g role="button" tabindex="0" aria-label="Inspect ${NODE_NAMES[node]}" aria-pressed="${observer === node}" data-observer-node="${node}"><circle cx="${x}" cy="${y}" r="23" fill="${observer === node ? '#446e91' : '#fbfcfa'}" stroke="#93a6b0"/><text x="${x}" y="${y + 5}" text-anchor="middle" font-size="15" font-family="sans-serif" fill="${observer === node ? 'white' : '#446e91'}">${NODE_NAMES[node]}</text></g>`).join('')}</svg>`;
   container.querySelectorAll('[data-observer-node]').forEach((element) => {
     const select = () => selectObserver(Number(element.dataset.observerNode));
     element.addEventListener('click', select);
@@ -107,11 +104,15 @@ function renderCache() {
   }).join('');
 }
 function renderChart() {
+  const width = Math.max(240, Math.round($('#arch-chart').clientWidth));
+  const height = 220, left = 34, right = 20, top = 20, bottom = 36;
   const end = Math.max(10, Math.ceil(run.step * MISSION_DT / 10) * 10);
-  const x = (time) => 34 + time / end * 320, y = (count) => 162 - count * 23;
-  const path = (key) => run.history.map((state, index) => `${index ? 'L' : 'M'}${x(state.time).toFixed(2)},${y(state[key])}`).join(' ');
-  $('#arch-chart').innerHTML = `<svg viewBox="0 0 380 198" role="img" aria-label="Completed task counts over model time: physical execution and confirmation coverage">${[0, 2, 4, 6].map((n) => `<path d="M34 ${y(n)}H354" stroke="#e2e5db"/><text x="23" y="${y(n) + 4}" text-anchor="end" font-size="12" fill="#58675c">${n}</text>`).join('')}<path d="${path('physical')}" stroke="#217761" stroke-width="3" fill="none"/><path d="${path('confirmed')}" stroke="#a87940" stroke-width="2.5" stroke-dasharray="6 4" fill="none"/><text x="34" y="185" font-size="12" fill="#58675c">0 s</text><text x="354" y="185" text-anchor="end" font-size="12" fill="#58675c">${end} s</text></svg>`;
+  const x = (time) => left + time / end * (width - left - right);
+  const y = (count) => height - bottom - count / 6 * (height - top - bottom);
+  const path = (key) => run.history.map((state, index) => `${index ? 'L' : 'M'}${x(state.time).toFixed(2)},${y(state[key]).toFixed(2)}`).join(' ');
+  $('#arch-chart').innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Completed task counts over model time: physical execution and confirmation coverage">${[0, 2, 4, 6].map((n) => `<path d="M${left} ${y(n)}H${width - right}" stroke="#dce3e1"/><text x="${left - 11}" y="${y(n) + 4}" text-anchor="end">${n}</text>`).join('')}<path d="${path('physical')}" stroke="#446e91" stroke-width="2.5" fill="none"/><path d="${path('confirmed')}" stroke="#947658" stroke-width="2.5" stroke-dasharray="6 4" fill="none"/><text x="${left}" y="${height - 14}">0 s</text><text x="${width - right}" y="${height - 14}" text-anchor="end">${end} s</text></svg>`;
 }
+
 function eventText(event) {
   if (event.type === 'partition') return 'Links cut: {C, A1} and {A2, A3}. No executor failed.';
   if (event.type === 'restored') return 'Links restored. Current reports carry earlier completion history.';
@@ -152,6 +153,38 @@ function render() {
   $('#arch-events').innerHTML = run.events.slice(-30).map((event) => `<li data-event="${event.type}" data-step="${event.step}"><time>${seconds(event.step)}</time>${eventText(event)}</li>`).join('');
   renderNetwork(); renderCache(); renderChart(); view.update(run, observer === 0 ? null : observer - 1);
 }
-window.addEventListener('pagehide', () => { stop(); view.dispose(); });
+// Explanations and chart layout observe the run, without changing decisions.
+function revealFragment() {
+  let id;
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+  const target = document.getElementById(id);
+  if (!target) return;
+  let opened = false;
+  for (let ancestor = target; ancestor; ancestor = ancestor.parentElement) {
+    if (ancestor instanceof HTMLDetailsElement && !ancestor.open) {
+      ancestor.open = true;
+      opened = true;
+    }
+  }
+  if (opened) requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+}
+let chartWidth = Math.round($('#arch-chart').clientWidth), chartFrame = null;
+const chartResize = new ResizeObserver(() => {
+  const width = Math.round($('#arch-chart').clientWidth);
+  if (width !== chartWidth) {
+    chartWidth = width;
+    cancelAnimationFrame(chartFrame);
+    chartFrame = requestAnimationFrame(renderChart);
+  }
+});
+chartResize.observe($('#arch-chart'));
+window.addEventListener('hashchange', revealFragment);
+function dispose() {
+  stop(); view.dispose(); chartResize.disconnect(); cancelAnimationFrame(chartFrame);
+  window.removeEventListener('hashchange', revealFragment);
+}
+window.addEventListener('pagehide', dispose);
+if (import.meta.hot) import.meta.hot.dispose(dispose);
 window.addEventListener('pageshow', (event) => { if (event.persisted) window.location.reload(); });
 render();
+revealFragment();

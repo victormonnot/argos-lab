@@ -1,47 +1,118 @@
-.arch-intro { padding: 25px 0 30px; max-width: 1060px; }
-.arch-intro h1 { font-size: 2.45rem; line-height: 1.2; letter-spacing: -.06rem; margin: 12px 0; }
-.arch-intro h1 br { display: none; }
-.arch-intro>p:not(.eyebrow) { font-size: 1rem; color: var(--muted); }
-.arch-intro .arch-prediction { margin-top: 11px; color: var(--ink); }
-.arch-lab { display: grid; grid-template-columns: minmax(0,1fr) 340px; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
-#arch-viewport { position: relative; min-width: 0; width: 100%; height: 485px; min-height: 390px; flex: 1; }
-.arch-controls { background: white; padding: 22px; min-width: 0; }
-.arch-controls>label { display: block; font-size: .875rem; font-weight: 600; margin-bottom: 9px; }
-.arch-controls>select { width: 100%; margin-bottom: 18px; }
-.arch-network-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: .875rem; border-top: 1px solid var(--line); margin-top: 18px; padding-top: 17px; }
-#arch-link-state { color: var(--teal); }
-#arch-network-diagram svg { width: 100%; height: auto; margin: 4px 0; }
-#arch-network-diagram [role=button] { cursor: pointer; outline: none; }
-#arch-network-diagram [role=button]:focus-visible circle { stroke: #b67932; stroke-width: 4; }
-.arch-advance { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 17px 0 10px; }
-.arch-advance button { font-size: .8125rem; padding: 10px 8px; }
-.arch-controls .wide { font-size: .875rem; }
-.arch-authority { display: grid; grid-template-columns: 230px minmax(0,1fr); gap: 20px; background: #edf2e8; padding: 18px 22px; border: 1px solid #d5dfce; border-radius: 6px; margin-bottom: 24px; }
-.arch-authority strong { font-size: 1rem; line-height: 1.6; }
-.arch-authority p { font-size: .9375rem; color: #496154; }
-.arch-inspection { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(0,1fr); gap: 22px; }
-.arch-cache,.arch-progress,.arch-task-inspection,.arch-agent-state { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 22px; min-width: 0; }
-.arch-cache>p { font-size: .875rem; color: var(--muted); margin: 12px 0; }
-.arch-cache .arch-readiness { color: var(--ink); background: #edf3ec; padding: 12px; border-radius: 4px; }
-.arch-cache .arch-readiness[data-waiting=true] { background: #fbefe2; color: #805329; }
-#arch-reports tr[data-stale=true] { background: #fcf3e6; }
-.arch-progress h3,.arch-agent-state h3 { margin: 6px 0 16px; }
-#arch-chart svg { width: 100%; height: auto; margin: 10px 0; }
-.arch-chart-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: .8125rem; margin-bottom: 12px; }
-.arch-chart-legend span:first-child { color: #217761; }
-.arch-chart-legend span:last-child { color: #8c603c; }
-.arch-traffic { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 12px; }
-.arch-traffic>div { display: flex; justify-content: space-between; gap: 10px; font-size: .8125rem; line-height: 1.7; margin: 6px 0; }
-.arch-task-inspection { margin: 22px 0; }
-#arch-tasks tr[data-unknown=true] { background: #fcf3e6; }
-.arch-bottom { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 22px; }
-#arch-events { padding: 0; margin: 0 0 16px; list-style: none; max-height: 285px; overflow-y: auto; }
-#arch-events li { font-size: .875rem; line-height: 1.65; padding: 7px 0; border-bottom: 1px solid var(--line); }
-#arch-events time { color: var(--teal); font: .8125rem ui-monospace,monospace; padding-right: 10px; }
-.arch-profile { margin: 32px 0 42px; }
-.arch-cases .exercise-grid { grid-template-columns: repeat(3,minmax(0,1fr)); margin-top: 25px; }
-.arch-equation { font-size: .9375rem; line-height: 1.9; }
-.architecture-page .mission-metrics strong { font-size: 1.65rem; }
-@media(max-width:1100px) { .arch-lab { grid-template-columns: minmax(0,1fr) 305px; } .arch-inspection { grid-template-columns: 1fr; } .arch-controls { padding: 18px; } }
-@media(max-width:850px) { .arch-lab,.arch-bottom { grid-template-columns: 1fr; } #arch-viewport { flex: auto; height: 450px; } #arch-network-diagram { max-width: 350px; margin: auto; } .arch-authority { grid-template-columns: 1fr; gap: 8px; } .arch-cases .exercise-grid { grid-template-columns: 1fr; } }
-@media(max-width:580px) { .arch-intro h1 { font-size: 2rem; } .arch-intro h1 br { display: block; } .arch-intro { padding: 20px 0; } #arch-viewport { height: 330px; min-height: 330px; } .arch-cache,.arch-progress,.arch-task-inspection,.arch-agent-state { padding: 16px; } .arch-cache .panel-heading,.arch-task-inspection .panel-heading { align-items: flex-start; flex-wrap: wrap; } .arch-equation { font-size: .8125rem; padding: 13px; } .architecture-page .mission-metrics strong { font-size: 1.4rem; } .arch-authority { padding: 16px; } }
+/* Workshop 04 extends the shared lesson layout; legacy styles stay separate. */
+.lesson-page .arch-example { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px 54px; max-width: 940px; margin: 50px auto 0 !important; }
+.lesson-page .arch-example-stage { min-width: 0; }
+.lesson-page .arch-example-index { color: var(--muted); font: 11px/1.6 var(--mono); }
+.lesson-page .arch-example-stage svg { display: block; width: 200px; max-width: 100%; height: 80px; margin: 16px auto; }
+.lesson-page .arch-example-stage > strong { display: block; color: var(--blue); font: 28px/1.4 var(--mono); }
+.lesson-page .arch-example-stage strong small { font-size: 15px; }
+.lesson-page .arch-example-stage p { max-width: 28ch; margin: 10px auto 0; color: var(--muted); font-size: 13px; }
+.lesson-page .arch-example figcaption { grid-column: 1 / -1; color: var(--muted); font: 10px/1.8 var(--mono); }
+.lesson-page .arch-intro .model-boundary { max-width: 85ch; margin-inline: auto; }
+.lesson-page .arch-preparation { margin-top: 15px; color: var(--muted); font-size: 12px; }
+.lesson-page .arch-preparation a { display: inline-block; padding: 4px 0; }
+.lesson-page .arch-prediction > div > p { max-width: 48ch; color: var(--muted); font-size: 14px; }
+.lesson-page .arch-prediction a { display: inline-flex; align-items: center; gap: 30px; min-height: 44px; margin-top: 16px; border-bottom: 1px solid var(--line); font-size: 13px; text-decoration: none; }
+.lesson-page .arch-prediction a:hover { border-color: var(--blue); }
+.lesson-page .arch-lab { align-items: stretch; }
+.lesson-page .arch-lab .mission-visual { display: flex; flex-direction: column; }
+.lesson-page .arch-lab .mission-toolbar { min-height: 77px; }
+.lesson-page #arch-viewport { position: relative; width: 100%; min-width: 0; height: 460px; min-height: 400px; flex: 1; }
+.lesson-page .arch-lab .mission-map-hint { padding: 18px 24px 20px; color: var(--muted); font-size: 11px; line-height: 1.8; }
+.architecture-page .lesson-page .transport { border-bottom: 0; }
+.architecture-page .lesson-page .transport button { font-size: 12px; }
+.architecture-page .lesson-page .speed-control select { max-width: 150px; font-size: 12px; }
+.lesson-page .arch-controls > label { display: block; margin-bottom: 9px; font-size: 13px; }
+.lesson-page .arch-controls > select { margin-bottom: 21px; }
+.lesson-page .arch-controls > p { margin: 0 0 22px; color: #586970; font-size: 12px; line-height: 1.8; }
+.lesson-page .arch-network-heading { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 7px 14px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 12px; }
+.lesson-page #arch-link-state { color: #365f80; font-size: 10px; }
+.lesson-page #arch-network-diagram { max-width: 340px; margin: 6px auto; }
+.lesson-page #arch-network-diagram svg { display: block; width: 100%; height: auto; }
+.lesson-page #arch-network-diagram [role='button'] { cursor: pointer; outline: none; }
+.lesson-page #arch-network-diagram [role='button']:focus-visible circle { stroke: #273438; stroke-width: 3; }
+.lesson-page .arch-advance { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 24px 0 12px; }
+.lesson-page .arch-advance button { padding-inline: 6px; font-size: 11px; }
+.lesson-page .arch-controls .wide { font-size: 12px; }
+.architecture-page .lesson-page .mission-metrics { padding: 30px 0; gap: 25px 40px; }
+.architecture-page .lesson-page .mission-metrics > div > span { color: var(--muted); font-size: 12px; }
+.architecture-page .lesson-page .mission-metrics strong { margin-top: 10px; font-size: 23px; }
+.architecture-page .lesson-page .mission-small { color: var(--muted); font-size: 12px; line-height: 1.8; }
+.architecture-page .lesson-page .mission-outcome { padding: 18px 24px; border-left: 2px solid var(--blue); background: #e9eff1; color: #35525e; font-size: 14px; line-height: 1.8; }
+.architecture-page .lesson-page .mission-outcome[data-status='budget'] { background: #efebe5; border-color: #9b7659; color: #70513c; }
+.lesson-page .arch-authority { display: grid; grid-template-columns: 215px minmax(0, 1fr); gap: 32px; margin-top: 26px; padding-top: 25px; border-top: 1px solid var(--line); }
+.lesson-page .arch-authority strong { font-size: 15px; }
+.lesson-page .arch-authority p { color: var(--muted); font-size: 13px; line-height: 1.8; }
+.lesson-page .arch-inspection { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 50px; }
+.lesson-page :is(.arch-cache, .arch-progress, .arch-task-inspection, .arch-agent-state, .arch-bottom .mission-events) { min-width: 0; padding-top: 28px; border-top: 1px solid var(--line); }
+.lesson-page .arch-cache .panel-heading { align-items: flex-start; }
+.lesson-page .arch-cache > p { margin-top: 20px; color: var(--muted); font-size: 13px; line-height: 1.8; }
+.lesson-page .arch-cache .arch-readiness { margin-block: 22px; padding: 16px 18px; background: #e9eff1; border-left: 2px solid #9aafbd; color: #35525e; }
+.lesson-page .arch-cache .arch-readiness[data-waiting='true'] { background: #efebe5; border-color: #aa8565; color: #70513c; }
+.lesson-page .arch-cache table { min-width: 580px; }
+.architecture-page .lesson-page th, .architecture-page .lesson-page td { padding-block: 12px; }
+.architecture-page .lesson-page caption { padding: 16px 0 0; caption-side: bottom; text-align: left; white-space: normal; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.lesson-page #arch-reports tr[data-stale='true'], .lesson-page #arch-tasks tr[data-unknown='true'] { background: #efebe5; }
+.lesson-page .arch-progress h3 { margin-top: 12px; }
+.lesson-page #arch-chart { margin-top: 26px; }
+.lesson-page #arch-chart svg { display: block; width: 100%; height: auto; color: var(--muted); font: 11px var(--mono); }
+.lesson-page #arch-chart svg text { fill: currentColor; }
+.lesson-page .arch-chart-legend { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 20px; font-size: 11px; }
+.lesson-page .arch-chart-legend span:first-child { color: #446e91; }
+.lesson-page .arch-chart-legend span:last-child { color: #856348; }
+.lesson-page .arch-progress > .mission-small { margin-top: 20px; }
+.lesson-page .arch-traffic { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); }
+.lesson-page .arch-traffic > div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px; margin-top: 13px; font-size: 12px; }
+.lesson-page .arch-traffic > div > span:last-child { font-family: var(--mono); }
+.lesson-page .arch-task-inspection { margin-top: 46px; }
+.lesson-page .arch-task-inspection .panel-heading { align-items: flex-start; }
+.lesson-page .arch-task-inspection table { min-width: 590px; }
+.lesson-page .arch-bottom { gap: 50px; }
+.lesson-page .arch-agent-state h3, .lesson-page .arch-bottom .mission-events h3 { margin: 12px 0 26px; }
+.lesson-page .arch-agent-state table { min-width: 435px; }
+.lesson-page #arch-agents button { min-height: 36px; padding: 5px 9px; font: 11px/1.6 var(--mono); }
+.lesson-page #arch-events { max-height: 290px; margin: 0 0 20px; padding: 0; list-style: none; overflow-y: auto; }
+.lesson-page #arch-events li { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; line-height: 1.8; }
+.lesson-page #arch-events time { display: inline-block; min-width: 56px; padding-right: 10px; color: var(--blue); font: 11px/1.8 var(--mono); }
+.lesson-page .arch-cases .exercise-diagram text { font-size: 13px; }
+.architecture-page .lesson-page .comparison-details table { min-width: 810px; }
+.lesson-page .arch-example-counts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px !important; }
+.lesson-page .arch-example-counts dt { color: #586970; font-size: 13px; }
+.lesson-page .arch-example-counts dd { margin: 10px 0 0; color: var(--blue); font: 27px/1.5 var(--mono); }
+.lesson-page .arch-example-counts > div:last-child dd { color: #856348; }
+.lesson-page .arch-equation { padding-block: 24px; text-align: left; font-size: 15px; }
+.lesson-page .arch-protocol-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 44px; list-style: none; margin: 0; padding: 0; }
+.lesson-page .arch-protocol-steps li { display: grid; grid-template-columns: 25px 1fr; gap: 15px; align-items: baseline; font: 15px/1.8 'IBM Plex Sans', Arial, sans-serif; }
+.lesson-page .arch-protocol-steps li > span { color: var(--blue); font: 11px/1.8 var(--mono); }
+.lesson-page .arch-next p:last-child { max-width: 58ch; }
+@media (max-width: 1100px) {
+  .architecture-page .lesson-page .mission-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 25px; }
+  .architecture-page .lesson-page .mission-metrics strong { font-size: 21px; }
+  .lesson-page .arch-inspection { grid-template-columns: 1fr; gap: 44px; }
+  .lesson-page .arch-bottom { gap: 30px; }
+  .lesson-page .arch-lab .mission-map-hint { padding-inline: 18px; }
+}
+@media (max-width: 820px) {
+  .lesson-page #arch-viewport { flex: auto; }
+  .lesson-page .arch-example { gap: 26px; }
+  .lesson-page .arch-example-stage svg { width: 170px; }
+  .lesson-page .arch-bottom { grid-template-columns: 1fr; gap: 44px; }
+  .lesson-page .arch-authority { grid-template-columns: 1fr; gap: 12px; }
+}
+@media (max-width: 600px) {
+  .lesson-page .arch-example { grid-template-columns: 1fr; max-width: 380px; gap: 28px; margin-top: 40px !important; }
+  .lesson-page .arch-example-stage { display: grid; grid-template-columns: 100px 1fr; gap: 0 20px; text-align: left; align-items: center; }
+  .lesson-page .arch-example-index { grid-column: 1 / -1; margin-bottom: 10px; font-size: 10px; }
+  .lesson-page .arch-example-stage svg { grid-column: 1; grid-row: 2 / 4; width: 100px; height: auto; margin: 0; }
+  .lesson-page .arch-example-stage > strong, .lesson-page .arch-example-stage p { grid-column: 2; }
+  .lesson-page .arch-example-stage > strong { font-size: 25px; }
+  .lesson-page .arch-example-stage p { margin: 6px 0 0; font-size: 12px; }
+  .lesson-page .arch-example figcaption { font-size: 10px; }
+  .lesson-page #arch-viewport { height: 420px; min-height: 420px; }
+  .lesson-page .arch-lab .mission-map-hint { padding: 15px; }
+  .architecture-page .lesson-page .mission-metrics { grid-template-columns: 1fr 1fr; gap: 28px 20px; }
+  .architecture-page .lesson-page .mission-outcome { padding: 16px 18px; font-size: 13px; }
+  .lesson-page .arch-cache .panel-heading, .lesson-page .arch-task-inspection .panel-heading { flex-wrap: wrap; gap: 16px; }
+  .lesson-page .arch-example-counts { gap: 18px; }
+  .lesson-page .arch-example-counts dd { font-size: 25px; }
+  .lesson-page .arch-protocol-steps { grid-template-columns: 1fr; gap: 22px; }
+}

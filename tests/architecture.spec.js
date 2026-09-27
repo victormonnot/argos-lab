@@ -9,6 +9,23 @@ const snapshot = async (page) => ({
   events: await page.locator('#arch-events').innerHTML(),
   traffic: await page.locator('#arch-traffic').innerHTML(),
 });
+const readingSnapshot = async (page) => ({
+  ...await snapshot(page),
+  agents: await page.locator('#arch-agents').innerHTML(),
+  chart: await page.locator('#arch-chart').innerHTML(),
+  network: await page.locator('#arch-network-diagram').innerHTML(),
+  links: await page.locator('#arch-link-state').textContent(),
+  metrics: await page.locator('#arch-physical, #arch-confirmed, #arch-time, #arch-messages, #arch-physical-time, #arch-confirmation-rule').allTextContents(),
+  status: await page.locator('#arch-status').textContent(),
+  outcome: await page.locator('#arch-outcome').textContent(),
+  readiness: await page.locator('#arch-readiness').textContent(),
+  lastPlan: await page.locator('#arch-last-plan').textContent(),
+  knownCount: await page.locator('#arch-known-count').textContent(),
+  authority: await page.locator('#arch-authority-description').textContent(),
+  observer: await page.locator('#arch-observer').inputValue(),
+  architecture: await page.locator('#arch-architecture').inputValue(),
+  schedule: await page.locator('#arch-network').inputValue(),
+});
 test.beforeEach(async ({ page }) => {
   const errors = []; browserErrors.set(page, errors);
   page.on('pageerror', (error) => errors.push(error.message));
@@ -18,7 +35,7 @@ test.beforeEach(async ({ page }) => {
 test.afterEach(async ({ page }) => expect(browserErrors.get(page)).toEqual([]));
 
 test('reports precede commands and become stale without stopping remote work', async ({ page }) => {
-  await expect(page.locator('h1')).toHaveText('Who can decide? Who can know?');
+  await expect(page.locator('h1')).toContainText('Decision architectures');
   await expect(page.locator('#arch-reports tr').first()).toContainText('Idle');
   await expect(page.locator('#arch-agents tr').first()).toContainText('Travelling');
   await page.locator('#arch-network').selectOption('partition');
@@ -157,4 +174,89 @@ test('unavailable WebGL keeps execution and knowledge inspection usable in 2D', 
   await expect(page.locator('#arch-physical')).toHaveText('6 / 6');
   await expect(page.locator('#arch-confirmed')).toHaveText('6 / 6');
   await expect(page.locator('#arch-time')).toHaveText('13.7 s');
+});
+
+test('reading protocol disclosures preserves partitioned execution, stale knowledge and the selected observer', async ({ page }) => {
+  await page.locator('#arch-network').selectOption('partition');
+  await page.locator('#arch-restore').click();
+  await page.locator('#arch-observer').selectOption('1');
+  const beforeReading = await readingSnapshot(page);
+  expect(beforeReading.step).toBe('80');
+  expect(beforeReading.observer).toBe('1');
+  expect(beforeReading.status).toBe('Paused');
+  await expect(page.locator('#arch-reports tr[data-stale="true"]')).toHaveCount(2);
+  await expect(page.locator('#arch-tasks tr[data-unknown="true"]')).not.toHaveCount(0);
+
+  for (const id of ['arch-method-details', 'arch-model-details']) {
+    const disclosure = page.locator(`#${id}`);
+    await expect(disclosure).not.toHaveAttribute('open', '');
+    await disclosure.locator(':scope > summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(disclosure).toHaveAttribute('open', '');
+    expect(await readingSnapshot(page)).toEqual(beforeReading);
+    await page.keyboard.press('Space');
+    await expect(disclosure).not.toHaveAttribute('open', '');
+    expect(await readingSnapshot(page)).toEqual(beforeReading);
+  }
+
+  await page.locator('#arch-step').click();
+  await expect(page.locator('#arch-step-count')).toHaveText('81');
+  await expect(page.locator('#arch-observer')).toHaveValue('1');
+  await expect(page.locator('#arch-link-state')).toHaveText('2 disconnected groups');
+});
+
+test('bookmarks reveal hidden comparisons and protocol phases without resetting current knowledge', async ({ page }) => {
+  await page.goto('/architecture/#arch-comparison-table');
+  await expect(page.locator('#arch-comparisons')).toHaveAttribute('open', '');
+  await expect(page.locator('#arch-comparison-table')).toBeVisible();
+  await expect(page.locator('#arch-comparison-table tr')).toHaveCount(9);
+  await expect(page.locator('#arch-comparison-table')).toContainText('Budget at 60.0 s');
+  await expect(page.locator('#arch-comparison-table')).toContainText('Confirmed at');
+
+  await page.locator('#arch-architecture').selectOption('hierarchy');
+  await page.locator('#arch-network').selectOption('partition');
+  await page.locator('#arch-restore').click();
+  await page.locator('#arch-observer').selectOption('3');
+  const beforeHashChange = await readingSnapshot(page);
+  await page.evaluate(() => { window.location.hash = 'arch-protocol'; });
+  await expect(page.locator('#arch-model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#arch-protocol')).toBeVisible();
+  expect(await readingSnapshot(page)).toEqual(beforeHashChange);
+
+  await page.reload();
+  await expect(page.locator('#arch-model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#arch-protocol')).toBeVisible();
+  await expect(page.locator('#arch-step-count')).toHaveText('0');
+  await expect(page.locator('#arch-architecture')).toHaveValue('central');
+  await expect(page.locator('#arch-network')).toHaveValue('recovery');
+});
+
+test('the static lesson and native disclosures remain readable without JavaScript', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL, viewport: { width: 390, height: 844 } });
+  try {
+    const page = await context.newPage();
+    const stylesheets = [];
+    page.on('response', (response) => {
+      if (response.request().resourceType() === 'stylesheet' && response.ok()) stylesheets.push(response.url());
+    });
+    await page.goto('/architecture/');
+    await expect(page.locator('h1')).toContainText('Decision architectures');
+    await expect(page.locator('.no-script-note')).toBeVisible();
+    await expect(page.locator('.no-script-note')).toContainText('JavaScript');
+    for (const name of ['lesson', 'architecture']) {
+      expect(stylesheets.some((url) => new URL(url).pathname === `/src/${name}.css`)).toBe(true);
+    }
+
+    await page.locator('#arch-method-details > summary').click();
+    await expect(page.locator('#arch-method-details')).toHaveAttribute('open', '');
+    await expect(page.locator('#arch-method-details')).toContainText(/synchronous/i);
+    await page.locator('#arch-model-details > summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#arch-protocol')).toBeVisible();
+    await expect(page.locator('#arch-protocol')).toContainText('Deliver current reports over active links');
+    await expect(page.locator('#arch-method .reference a')).toHaveAttribute('href', 'https://lamport.org/pubs/time-clocks.pdf');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  } finally {
+    await context.close();
+  }
 });

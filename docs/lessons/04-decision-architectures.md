@@ -24,6 +24,38 @@ The peer rule is a declared pedagogical protocol, not an implementation of Raft,
 Paxos, an auction or the Lamport logical-clock algorithm. The recognizable
 architecture terms and greedy rule are named separately from this protocol.
 
+## Reading structure
+
+The opening follows the default central run with restoration: links cut at
+`2.0 s`, A3 completes T3 at `4.0 s`, then reports return at `8.0 s`.
+At `4.0 s`, two tasks are physically complete but C knows only T1. Its A3 report
+was sampled at `1.9 s`: travelling toward T3, which remains reserved. At `8.0 s`,
+fresh reports bring C to three known completions; the mission still has work
+to execute. A new cumulative report carries earlier completions. Dropped packets
+are not queued for replay. The drawings are schematic.
+
+A question about silence and agent failure leads to the experiment. Decision
+rights, network conditions, received reports, evaluator state and both completion
+counts remain directly inspectable. Four illustrated questions cover retained
+reservations, fixed delegation, the full-roster peer barrier and restored
+communication. Six case buttons start new paused runs; the nine reference
+comparisons expand without changing the current run.
+
+The visible method summary distinguishes assignment, authority, local caches
+and synchronous transport. Native **Method & assumptions** and **Read the
+protocol, assumptions & source** disclosures give the full definitions and
+source. Reading them or following a same-page fragment never resets the run.
+With JavaScript, fragments inside a closed disclosure reveal their target.
+The worked example, exercises and technical text remain styled and readable
+without JavaScript; running the model requires it.
+
+The light 2D/3D views show physical positions and task progress. A `?` identifies
+completed work the selected observer has not learned; 3D agent labels also show
+the age of stale reports. Text tables expose the exact sampled reports and
+retained reservations. These annotations use existing caches, not a second
+simulation. The closing link leads to the separate, advanced CBBA allocation
+lesson, which has no physical motion or task execution.
+
 ## Same physical mission; explicit authority differences
 
 Reuse the three starts, six task coordinates, `1 m/s` straight-line speed and
