@@ -3,74 +3,177 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#10100f" />
+  <meta name="theme-color" content="#f3f4f1" />
   <meta name="description" content="Explore Artificial Potential Fields: three agents navigate using attraction and repulsion, with a reproducible local trap and collision comparisons." />
   <title>Artificial Potential Fields · ARGOS Lab</title>
+  <link rel="stylesheet" href="/src/lesson.css" />
+  <link rel="stylesheet" href="/src/movement.css" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 </head>
-<body class="movement-page argos-workshop" data-workshop="02">
+<body class="movement-page argos-workshop lesson-workshop" data-workshop="02">
   <a class="skip-link" href="#movement-experiment">Skip to experiment</a>
   <!-- argos:header -->
-  <main>
-    <div class="argos-workshop-topbar">
-      <!-- argos:workshop-nav -->
-      <nav class="argos-workshop-sections" aria-label="On this page"><a href="#movement-experiment">Experiment</a><a href="#movement-model">The model ↗</a></nav>
-    </div>
-    <section class="movement-intro" aria-labelledby="movement-title">
-      <div><p class="eyebrow">02 / COLLECTIVE MOVEMENT</p><h1 id="movement-title">Artificial Potential Fields<span>Attraction, repulsion, and getting stuck.</span></h1><p>Three agents move toward a shared goal region. Each combines a pull toward the goal with pushes away from walls and nearby agents.</p></div>
-      <aside class="movement-prediction"><strong>Predict before running</strong><p>If attraction and repulsion cancel before the goal, will the agents find a way around?</p><a href="#movement-cases">Test the U-shaped trap ↓</a></aside>
-    </section>
-    <section id="movement-experiment" aria-label="Potential-field experiment">
-      <div class="experiment-heading"><div><span class="eyebrow">ARTIFICIAL POTENTIAL FIELDS / APF</span><h2>Local motion decisions</h2></div><span id="movement-status" class="status" aria-live="polite">Paused</span></div>
-      <div class="movement-lab">
-        <div class="movement-visual">
-          <div class="movement-toolbar"><strong id="movement-map-name">Open corridor</strong><div class="segmented" role="group" aria-label="Movement view"><button id="movement-2d" aria-pressed="true">2D</button><button id="movement-3d" aria-pressed="false">3D</button></div></div>
+  <main class="lesson-page">
+      <div class="argos-workshop-topbar">
+        <!-- argos:workshop-nav -->
+      </div>
+      <section class="intro movement-intro" aria-labelledby="movement-title">
+        <p class="eyebrow">02 / Motion · Beginner</p>
+        <h1 id="movement-title">Artificial<br> Potential Fields.</h1>
+        <p class="intro-question">Can local decisions find a way through?</p>
+        <p class="intro-copy">Three agents share a destination.<br>Each combines a command toward the goal with commands away from nearby surfaces.</p>
+        <a class="lesson-start" href="#movement-experiment">Try the experiment <span aria-hidden="true">↘</span></a>
+        <figure class="movement-example" aria-labelledby="movement-example-caption">
+          <div class="movement-example-stage"><span class="example-index">01 / Add</span><svg viewBox="0 0 200 76" fill="none" aria-hidden="true"><path d="M28 38h140m-10-6 10 6-10 6" stroke="#446e91" stroke-width="1.5"/><circle cx="28" cy="38" r="10" fill="#f3f4f1" stroke="#273438"/><path d="M28 24V5m-4 6 4-6 4 6M28 52v19m-4-6 4 6 4-6" stroke="#78668f" stroke-width="1.2"/><circle cx="180" cy="38" r="15" stroke="#446e91" stroke-dasharray="2 4"/></svg><strong>4.8 <small>m/s</small></strong><p>Goal contribution. Peer pushes cancel.</p></div>
+          <div class="movement-example-stage"><span class="example-index">02 / Limit</span><svg viewBox="0 0 200 76" fill="none" aria-hidden="true"><path d="M28 38h140" stroke="#aab8bb" stroke-dasharray="3 5"/><path d="M28 38h64m-9-6 9 6-9 6" stroke="#273438" stroke-width="1.5"/><circle cx="28" cy="38" r="10" fill="#f3f4f1" stroke="#273438"/><path d="M100 20v36" stroke="#9a897a"/></svg><strong>1 <small>m/s</small></strong><p>The speed cap limits the command.</p></div>
+          <div class="movement-example-stage"><span class="example-index">03 / Move</span><svg viewBox="0 0 200 76" fill="none" aria-hidden="true"><path d="M28 38h74m-9-6 9 6-9 6" stroke="#446e91" stroke-width="1.5"/><circle cx="28" cy="38" r="10" stroke="#aab8bb" stroke-dasharray="2 3"/><circle cx="117" cy="38" r="10" stroke="#446e91"/><path d="M28 60v6h89v-6" stroke="#aab8bb"/></svg><strong>2 <small>cm</small></strong><p>A2 moves toward the goal in 0.02 s.</p></div>
+          <figcaption id="movement-example-caption">Worked example · A2 at the start of the corridor · reference gains<br>Walls are outside repulsion range. Arrows are schematic velocity contributions, not physical forces.</figcaption>
+        </figure>
+        <p class="model-boundary">A browser simulation of planar motion. The 3D drones show the same disk model; there is no flight physics or live execution.</p>
+      </section>
+      <section class="prediction movement-prediction" aria-labelledby="movement-prediction-title">
+        <div><p class="eyebrow">Before you begin</p><h2 id="movement-prediction-title">If the commands cancel,<br>what happens next?</h2></div>
+        <div><p>A route may exist even when the local rule cannot find it. Predict what the agents will do inside a U-shaped trap.</p><a class="prediction-link" href="#movement-cases">Explore the four questions <span aria-hidden="true">↘</span></a></div>
+      </section>
+      <nav class="argos-workshop-sections" aria-label="On this page"><a href="#movement-experiment">Experiment <span aria-hidden="true">↘</span></a><a href="#movement-cases">Four things to try <span aria-hidden="true">↘</span></a><a href="#movement-model">The model <span aria-hidden="true">↘</span></a></nav>
+      <details id="movement-method-details" class="method-profile">
+        <summary><span id="movement-profile-title">Method &amp; assumptions</span><span class="method-summary">Reactive local rule · known map · exact nearby peer sensing<br>Synchronous 0.02 s steps · no message network</span></summary>
+        <div class="method-body"><dl class="method-aspects">
+      <div><dt>Algorithm / variant</dt><dd><strong>Artificial Potential Fields</strong><p>Quadratic goal attraction plus finite-range inverse-clearance repulsion, adapted to velocity commands.</p></dd></div>
+      <div><dt>Decision architecture</dt><dd><strong>Decentralized · reactive</strong><p>Each agent uses its own position, a preloaded goal/map, and nearby peer positions. No shared route planner.</p></dd></div>
+      <div><dt>Update timing</dt><dd><strong>Synchronous · discrete time</strong><p>All commands read the previous state. Position advances by velocity × 0.02 s.</p></dd></div>
+      <div><dt>Sensing / communication</dt><dd><strong>Ideal local peer sensing</strong><p>Peers within 0.7 m surface clearance are sensed exactly. The static obstacle map is known. No message network is modeled.</p></dd></div>
+        </dl><p class="method-execution"><strong>Execution:</strong> one browser simulation of planar kinematics. The 3D view places detailed quadrotors at a fixed 0.65 m display height above the same x/y footprint. Extruded capsule walls match the map. There is no vertical escape, acceleration limit or flight physics.</p></div>
+      </details>
+      <noscript><p class="no-script-note">JavaScript is needed to run the experiment. You can still read the worked example, exercises and model below.</p></noscript>
+    <section id="movement-experiment" class="experiment" aria-label="Potential-field experiment">
+      <div class="experiment-heading"><div><span class="eyebrow">01 / Try it</span><h2>A direction at every step.</h2></div><span id="movement-status" class="status" aria-live="polite">Paused</span></div>
+      <div class="movement-lab lab-grid">
+        <div class="movement-visual visual-panel">
+          <div class="movement-toolbar visual-toolbar"><strong id="movement-map-name">Open corridor</strong><div class="segmented" role="group" aria-label="Movement view"><button id="movement-2d" aria-pressed="true">2D</button><button id="movement-3d" aria-pressed="false">3D</button></div></div>
           <div id="movement-viewport"></div>
           <div class="movement-legend"><span><i class="goal-key"></i> Goal attraction</span><span><i class="wall-key"></i> Wall repulsion</span><span><i class="peer-key"></i> Agent separation</span><span><i class="net-key"></i> Capped velocity</span></div>
           <p id="movement-view-hint" class="movement-caption">Select an agent to inspect its decision. Arrows are capped for legibility; the table gives exact velocity components. Map distances are in metres.</p>
           <div class="transport"><button id="movement-play" class="primary">▶ Play</button><button id="movement-step">Step once →</button><button id="movement-reset" class="quiet">Reset</button><div class="speed-control"><label for="movement-speed">Playback</label><select id="movement-speed"><option value="10">0.2× · 10 steps/s</option><option value="50" selected>1× · 50 steps/s</option><option value="200">4× · 200 steps/s</option></select></div></div>
         </div>
-        <aside class="movement-config" aria-label="Movement configuration">
+        <aside class="movement-config configuration" aria-label="Movement configuration">
+          <div class="panel-heading"><span class="eyebrow">Set the conditions</span><span class="small">New run</span></div>
           <label for="movement-preset">Environment geometry</label><select id="movement-preset"><option value="open">Open field</option><option value="corridor" selected>Open corridor</option><option value="trap">U-shaped trap</option></select>
-          <p class="small">Same APF controller; this changes the known obstacle map.</p>
+          <p class="small">The APF rule stays the same. This selector changes the known obstacle map.</p>
           <form id="movement-gains"><fieldset><legend>Controller gains</legend>
             <label for="gain-attraction">Goal attraction <output id="attraction-output">0.60</output></label><input id="gain-attraction" type="range" min="0.2" max="1.2" step="0.05" value="0.6" />
             <label for="gain-obstacle">Obstacle repulsion <output id="obstacle-output">0.15</output></label><input id="gain-obstacle" type="range" min="0" max="0.4" step="0.01" value="0.15" />
             <label for="gain-separation">Agent separation <output id="separation-output">0.020</output></label><input id="gain-separation" type="range" min="0" max="0.08" step="0.005" value="0.02" />
             <button class="wide" type="submit">Apply gains &amp; reset ↗</button>
           </fieldset></form>
-          <p class="small">Changing the map or applying gains starts a paused run. Reset restores the applied configuration. Runs stay in this tab.</p>
+          <p class="small">Changing the map or applying gains starts a paused run. Reset restores the applied configuration. Runs are lost on reload.</p>
           <div class="movement-constants"><span><strong>3</strong> disk agents</span><span><strong>0.02 s</strong> model step</span><span><strong>1 m/s</strong> speed limit</span><span><strong>0.8 m</strong> goal radius</span></div>
           <button id="movement-finish" class="wide">Run to outcome ↗</button>
         </aside>
       </div>
-      <div class="movement-metrics"><div><span>SIMULATED TIME</span><strong id="movement-time">0.00 s</strong><small>Step <span id="movement-step-count">0</span> / 2,000</small></div><div><span>INSIDE GOAL REGION</span><strong id="movement-arrived">0 / 3</strong><small>All three required for success</small></div><div><span>FARTHEST FROM GOAL</span><strong id="movement-distance">8.02 m</strong><small>Centre distance; goal radius 0.8 m</small></div><div><span>MINIMUM CLEARANCE</span><strong id="movement-clearance">0.36 m</strong><small>Swept surfaces over the entire run</small></div></div>
+      <div class="movement-metrics metrics"><div><span>Simulated time</span><strong id="movement-time">0.00 s</strong><small>Step <span id="movement-step-count">0</span> / 2,000</small></div><div><span>Inside goal region</span><strong id="movement-arrived">0 / 3</strong><small>All three required for success</small></div><div><span>Farthest from goal</span><strong id="movement-distance">8.02 m</strong><small>Centre distance; goal radius 0.8 m</small></div><div><span>Minimum clearance</span><strong id="movement-clearance">0.36 m</strong><small>Swept surfaces over the entire run</small></div></div>
       <p id="movement-outcome" class="movement-outcome" aria-live="polite">The experiment is paused. Predict, then advance one model step.</p>
-      <div class="movement-inspection">
-        <section class="chart-panel"><div class="panel-heading"><div><span class="eyebrow">OBSERVE</span><h3>Progress toward the goal</h3></div><span class="small">Maximum centre distance · m</span></div><div id="movement-chart"></div><p class="small">Dashed line: the 0.8 m goal radius. Near-zero speed alone does not establish arrival.</p></section>
-        <section class="state-panel"><div class="panel-heading"><div><span class="eyebrow">INSPECT</span><h3>Agent <span id="movement-selected-name">A1</span>’s decision</h3></div><select id="movement-agent" aria-label="Inspect movement agent"><option value="0">A1</option><option value="1">A2</option><option value="2">A3</option></select></div><dl id="movement-vectors" class="movement-vectors"></dl><p id="movement-inputs" class="small"></p></section>
+      <div class="movement-inspection inspection-grid">
+        <section class="chart-panel"><div class="panel-heading"><div><span class="eyebrow">Watch the distance</span><h3>Progress toward the goal</h3></div><span class="small">Maximum centre distance · m</span></div><div id="movement-chart"></div><p class="small">Dashed line: the 0.8 m goal radius. Near-zero speed alone does not establish arrival.</p></section>
+        <section class="state-panel"><div class="panel-heading"><div><span class="eyebrow">Look inside</span><h3>Agent <span id="movement-selected-name">A1</span>’s decision</h3></div><select id="movement-agent" aria-label="Inspect movement agent"><option value="0">A1</option><option value="1">A2</option><option value="2">A3</option></select></div><dl id="movement-vectors" class="movement-vectors"></dl><p id="movement-inputs" class="small"></p></section>
       </div>
+      <p class="experiment-boundary">The controller receives its own position, the goal, the known map and nearby peer positions. Arrival, clearance and stall are evaluator measurements.</p>
       <div class="movement-state-table table-scroll"><table><caption>Evaluator state · all positions in model metres. Global arrival, minimum clearance and stalled status are not controller inputs.</caption><thead><tr><th>Agent</th><th>x</th><th>y</th><th>Goal distance</th><th>Path travelled</th><th>Inside goal?</th></tr></thead><tbody id="movement-table"></tbody></table></div>
     </section>
-    <section class="method-profile movement-profile" aria-labelledby="movement-profile-title"><div class="method-profile-heading"><h2 id="movement-profile-title">Know the method</h2><a href="#movement-model">Equations &amp; source ↗</a></div><dl class="method-aspects">
-      <div><dt>Algorithm / variant</dt><dd><strong>Artificial Potential Fields</strong><p>Quadratic goal attraction plus finite-range inverse-clearance repulsion, adapted to velocity commands.</p></dd></div>
-      <div><dt>Decision architecture</dt><dd><strong>Decentralized · reactive</strong><p>Each agent uses its own position, a preloaded goal/map, and nearby peer positions. No shared route planner.</p></dd></div>
-      <div><dt>Update timing</dt><dd><strong>Synchronous · discrete time</strong><p>All commands read the previous state. Position advances by velocity × 0.02 s.</p></dd></div>
-      <div><dt>Sensing / communication</dt><dd><strong>Ideal local peer sensing</strong><p>Peers within 0.7 m surface clearance are sensed exactly. The static obstacle map is known. No message network is modeled.</p></dd></div>
-    </dl><p class="method-execution"><strong>Execution:</strong> one browser simulation of planar kinematics. The 3D view places detailed quadrotors at a fixed 0.65 m display height above the same x/y footprint. Extruded capsule walls match the map. There is no vertical escape, acceleration limit or flight physics.</p></section>
-    <section id="movement-cases" class="movement-cases" aria-labelledby="movement-cases-title"><div class="section-heading"><div><p class="eyebrow">PREDICT · MANIPULATE · EXPLAIN</p><h2 id="movement-cases-title">Movement can stop for different reasons.</h2></div></div><div class="exercise-grid">
-      <article><span class="exercise-number">01 / BASELINE</span><h3>Reach the goal together.</h3><p class="scenario-aspect"><strong>Changes:</strong> environment geometry</p><p>Compare open ground with a corridor. Watch the three paths and inspect which velocity components act near the walls.</p><button data-movement-case="open">Load open field ↗</button><button data-movement-case="corridor" class="secondary-exercise">Load corridor ↗</button></article>
-      <article><span class="exercise-number">02 / LOCAL TRAP</span><h3>Still running the rule. Going nowhere.</h3><p class="scenario-aspect"><strong>Changes:</strong> a closing wall</p><p>The goal is beyond the U. A route exists around it, but the local attraction and repulsion can balance inside. Inspect the cancelling vectors.</p><button data-movement-case="trap">Load U-shaped trap ↗</button></article>
-      <article><span class="exercise-number">03 / SEPARATION</span><h3>What keeps agents apart?</h3><p class="scenario-aspect"><strong>Changes:</strong> peer repulsion gain</p><p>Remove separation on open ground. Do the agents enter the goal region before their disks touch? The evaluator checks motion between steps too.</p><button data-movement-case="no-separation">Disable agent separation ↗</button></article>
-      <article><span class="exercise-number">04 / OBSTACLES</span><h3>Less repulsion is not a route.</h3><p class="scenario-aspect"><strong>Changes:</strong> obstacle repulsion gain</p><p>Turn off wall repulsion in the U. Compare the outcome with the stalled run: moving forward can mean colliding rather than recovering.</p><button data-movement-case="no-obstacles">Disable obstacle repulsion ↗</button></article>
-    </div><p class="exercise-notice">Guided cases load the reference gains, then apply only the stated change. Each starts paused.</p>
-    <details id="movement-comparisons" class="comparison-details"><summary>Compare measured reference runs <span>Arrival · stall · collision</span></summary><p>Computed with this model and a maximum budget of 2,000 steps. Each run stops at its first evaluated outcome. Results do not change your current run.</p><div class="table-scroll"><table><caption>Minimum clearance measures surface-to-surface distance over swept motion, including agent pairs and walls.</caption><thead><tr><th>Experiment</th><th>Outcome</th><th>Step</th><th>Time</th><th>Inside goal</th><th>Min. clearance</th></tr></thead><tbody id="movement-comparison-table"></tbody></table></div></details></section>
-    <section id="movement-model" class="model-section"><div><p class="eyebrow">THE ALGORITHM / APF</p><h2>Follow the local<br>potential gradient.</h2><p>The goal contributes a vector toward its centre. Nearby surfaces contribute outward vectors. Each agent adds them and caps the result at 1 m/s.</p><p>These vectors are velocity contributions, not measured physical forces. This educational controller adapts the potential-field idea to a first-order kinematic model.</p></div><div class="model-content">
-      <div class="equation movement-equation">u<sub>goal</sub> = k<sub>goal</sub> (g − p)<br>u<sub>rep</sub> = η (1/d − 1/d₀) n / d² &nbsp; if 0 &lt; d &lt; d₀<br>v = limit(u<sub>goal</sub> + ∑ u<sub>wall</sub> + ∑ u<sub>peer</sub>, 1 m/s)<br>p[k + 1] = p[k] + 0.02 v[k]</div>
+      <section id="movement-cases" class="movement-cases field-notes" aria-labelledby="movement-cases-title"><div class="section-heading"><div><p class="eyebrow">02 / Follow a question</p><h2 id="movement-cases-title">Arrive. Stall. Collide.<br>What makes the difference?</h2></div><p>Change one condition. Inspect how the outcome changes.</p></div><div class="exercise-grid">
+        <article>
+<svg class="exercise-diagram" viewBox="0 0 420 140" fill="none" role="img" aria-label="Schematic comparison: three agents approach a goal on open ground; three agents approach another goal through an open corridor. The rule stays the same.">
+  <g stroke="#aab8bb" stroke-width="1.2">
+    <path d="M209 20v83" stroke-dasharray="2 5"/>
+    <path d="M279 31h77 M279 103h77" stroke="#9a897a" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g stroke="#446e91" stroke-width="1.4">
+    <path d="M54 43 134 60 M54 67h80 M54 91 134 74" stroke-dasharray="3 5"/>
+    <path d="M253 43 333 60 M253 67h80 M253 91 333 74" stroke-dasharray="3 5"/>
+    <path d="m122 62 12 5-12 5 M321 62l12 5-12 5"/>
+    <circle cx="157" cy="67" r="18"/><circle cx="157" cy="67" r="3"/>
+    <circle cx="379" cy="67" r="18"/><circle cx="379" cy="67" r="3"/>
+  </g>
+  <g fill="#f3f4f1" stroke="#273438" stroke-width="1.3">
+    <circle cx="45" cy="43" r="6"/><circle cx="45" cy="67" r="6"/><circle cx="45" cy="91" r="6"/>
+    <circle cx="244" cy="43" r="6"/><circle cx="244" cy="67" r="6"/><circle cx="244" cy="91" r="6"/>
+  </g>
+  <g fill="#617077" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">
+    <text x="100" y="133">Open field</text><text x="317" y="133">Open corridor</text>
+  </g>
+</svg>
+          <span class="exercise-number">01 / Environment</span><h3>Same rule. Different walls.</h3><p>Compare open ground with a corridor. Look at the paths and the contribution of the walls.</p><button data-movement-case="open">Load open field <span aria-hidden="true">↗</span></button><button data-movement-case="corridor" class="secondary-exercise">Load corridor <span aria-hidden="true">↗</span></button>
+        </article>
+        <article>
+<svg class="exercise-diagram" viewBox="0 0 420 140" fill="none" role="img" aria-label="Schematic U-shaped trap opening left: an agent is inside, while the goal is outside to the right. A dashed possible route exits left and passes above the wall; the APF controller does not search for this route.">
+  <path d="M158 42h112v59H158" stroke="#9a897a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M218 72H134Q117 72 117 54V27Q117 17 129 17H333Q360 17 360 44" stroke="#aab8bb" stroke-width="1.3" stroke-dasharray="3 5"/>
+  <path d="m355 36 5 8 5-8" stroke="#aab8bb" stroke-width="1.3"/>
+  <path d="M228 72h26m-9-5 9 5-9 5" stroke="#446e91" stroke-width="1.5"/>
+  <path d="M216 72h-26m9-5-9 5 9 5" stroke="#9a897a" stroke-width="1.5"/>
+  <circle cx="222" cy="72" r="6" fill="#f3f4f1" stroke="#273438" stroke-width="1.3"/>
+  <circle cx="360" cy="72" r="18" stroke="#446e91" stroke-width="1.4"/><circle cx="360" cy="72" r="3" stroke="#446e91" stroke-width="1.4"/>
+  <g fill="#617077" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">
+    <text x="222" y="132">Local balance</text><text x="360" y="132">Goal</text>
+  </g>
+</svg>
+          <span class="exercise-number">02 / Local trap</span><h3>A way out. No plan to find it.</h3><p>The U opens to the left; the goal is on the right. Can local contributions guide the agents back out and around?</p><button data-movement-case="trap">Load U-shaped trap <span aria-hidden="true">↗</span></button>
+        </article>
+        <article>
+<svg class="exercise-diagram" viewBox="0 0 420 140" fill="none" role="img" aria-label="Schematic of disabled peer repulsion: three agents approach the same goal and their disk footprints meet before entering the goal region. Dotted lines indicate the idea, not measured trajectories.">
+  <g stroke="#aab8bb" stroke-width="1.2" stroke-dasharray="3 5">
+    <path d="M63 33 251 56 M63 68h188 M63 103 251 80"/>
+    <path d="M280 68h47"/>
+  </g>
+  <g fill="#f3f4f1" stroke="#273438" stroke-width="1.3">
+    <circle cx="56" cy="33" r="6"/><circle cx="56" cy="68" r="6"/><circle cx="56" cy="103" r="6"/>
+  </g>
+  <g fill="#f3f4f1" stroke="#9a897a" stroke-width="1.7">
+    <circle cx="263" cy="56" r="6"/><circle cx="263" cy="68" r="6"/><circle cx="263" cy="80" r="6"/>
+  </g>
+  <path d="M282 50h8v36h-8" stroke="#9a897a" stroke-width="1.1"/>
+  <circle cx="358" cy="68" r="24" stroke="#446e91" stroke-width="1.4"/><circle cx="358" cy="68" r="3" stroke="#446e91" stroke-width="1.4"/>
+  <g fill="#617077" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">
+    <text x="112" y="132">Separation off</text><text x="263" y="132">Contact</text>
+  </g>
+</svg>
+          <span class="exercise-number">03 / Peer repulsion</span><h3>What keeps agents apart?</h3><p>Turn off agent separation on open ground. Do their disks touch before reaching the goal?</p><button data-movement-case="no-separation">Disable agent separation <span aria-hidden="true">↗</span></button>
+        </article>
+        <article>
+<svg class="exercise-diagram" viewBox="0 0 420 140" fill="none" role="img" aria-label="Schematic of disabled wall repulsion: three agents approach the solid closing wall of the U and make contact. Turning repulsion off leaves the obstacle in place; the goal stays beyond the wall.">
+  <path d="M158 25h115v88H158" stroke="#9a897a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g stroke="#aab8bb" stroke-width="1.2" stroke-dasharray="3 5">
+    <path d="M73 43 250 51 M73 69h177 M73 95 250 87"/>
+  </g>
+  <g fill="#f3f4f1" stroke="#273438" stroke-width="1.3">
+    <circle cx="66" cy="43" r="6"/><circle cx="66" cy="69" r="6"/><circle cx="66" cy="95" r="6"/>
+  </g>
+  <g fill="#f3f4f1" stroke="#9a897a" stroke-width="1.7">
+    <circle cx="264.5" cy="51" r="6"/><circle cx="264.5" cy="69" r="6"/><circle cx="264.5" cy="87" r="6"/>
+  </g>
+  <circle cx="360" cy="69" r="18" stroke="#446e91" stroke-width="1.4"/><circle cx="360" cy="69" r="3" stroke="#446e91" stroke-width="1.4"/>
+  <g fill="#617077" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">
+    <text x="113" y="136">Wall repulsion off</text><text x="302" y="136">Wall stays</text>
+  </g>
+</svg>
+          <span class="exercise-number">04 / Wall repulsion</span><h3>The wall is still there.</h3><p>Turn off wall repulsion in the U. Compare the outcome with the trapped run: does moving forward solve the problem?</p><button data-movement-case="no-obstacles">Disable obstacle repulsion <span aria-hidden="true">↗</span></button>
+        </article>
+      </div><p class="exercise-notice">Guided cases load the reference gains, then apply only the stated change. Each starts paused. Diagrams are schematics, not recorded trajectories.</p>
+    <details id="movement-comparisons" class="comparison-details"><summary>Compare measured reference runs <span>Arrival · stall · collision</span></summary><p>Computed with this model and a maximum budget of 2,000 steps. Each run stops at its first evaluated outcome. Results do not change your current run.</p><div class="table-scroll"><table><caption>Minimum clearance measures surface-to-surface distance over swept motion, including agent pairs and walls.</caption><thead><tr><th>Experiment</th><th>Outcome</th><th>Step</th><th>Time</th><th>Inside goal</th><th>Min. clearance</th></tr></thead><tbody id="movement-comparison-table"></tbody></table></div></details>
+      </section>
+      <section id="movement-model" class="model-section" aria-labelledby="movement-model-title">
+        <div class="model-intro"><p class="eyebrow">03 / Go deeper</p><h2 id="movement-model-title">Add directions.<br>Take a small step.</h2><p>The goal points one way; nearby surfaces point away. Each agent adds these velocity contributions, caps the speed, then moves for 0.02 s.</p></div>
+        <div class="model-preview"><span class="eyebrow">One agent, one step</span><p>At the start, A2 is at <strong>(−4, 0)</strong>. The goal contribution is (4.8, 0) m/s. Peer contributions cancel and the walls are out of range.</p><p class="worked-equation"><span>1 m/s × 0.02 s</span> <strong>= 2 cm</strong></p><p>After the speed cap, A2 reaches <strong>(−3.98, 0)</strong> in one step.</p></div>
+        <details id="movement-model-details" class="model-details"><summary>Read the rule, assumptions &amp; source <span aria-hidden="true">+</span></summary><div class="model-content">
+      <div id="movement-equation" class="equation movement-equation">u<sub>goal</sub> = k<sub>goal</sub> (g − p)<br>u<sub>rep</sub> = η (1/d − 1/d₀) n / d² &nbsp; if 0 &lt; d &lt; d₀<br>v = limit(u<sub>goal</sub> + ∑ u<sub>wall</sub> + ∑ u<sub>peer</sub>, 1 m/s)<br>p[k + 1] = p[k] + 0.02 v[k]</div>
       <dl class="equation-key"><div><dt>p, g · metres</dt><dd>The agent position and goal centre.</dd></div><div><dt>d, d₀ · metres</dt><dd>Surface clearance and influence distance: 1 m for walls, 0.7 m for peers. Repulsion is zero beyond d₀.</dd></div><div><dt>n</dt><dd>A unit vector pointing away from the wall or neighboring disk.</dd></div><div><dt>k<sub>goal</sub>, η</dt><dd>Attraction gain in s⁻¹; repulsion gains in m⁴/s for this velocity formulation.</dd></div></dl>
       <div class="model-facts"><div><h3>What counts as success?</h3><p>All three agent centres must be within 0.8 m of the goal centre, with no swept contact. Agents are disks of radius 0.12 m; wall segments have radius 0.10 m. Contact stops the run as a collision.</p></div><div><h3>What counts as stalled?</h3><p>For 100 consecutive updates, all speeds stay below 0.005 m/s and the maximum goal distance changes by less than 0.01 m, with arrival still incomplete. This measured criterion is not a proof that every small perturbation must stay trapped.</p></div></div>
       <p class="reference">Primary method source: Oussama Khatib (1986), <a href="https://khatib.stanford.edu/publications/pdfs/Khatib_1986_IJRR.pdf" target="_blank" rel="noreferrer">Real-Time Obstacle Avoidance for Manipulators and Mobile Robots ↗</a>. This page implements the stated velocity-controller adaptation, with no global path search or guarantee of collision avoidance or arrival.</p>
-    </div></section>
+
+        </div></details>
+        <p class="model-limits">These are velocity commands, not physical forces. Local avoidance gives no general guarantee of arrival or collision avoidance. A stopped agent has not necessarily reached its goal.</p>
+      </section>
+      <section class="lesson-next" aria-label="Continue learning"><div><p class="eyebrow">Keep the thread</p><h2>Moving locally.<br>Planning ahead.</h2><p>Explore how A* searches a known map before the agent moves, in a separate grid-based experiment.</p></div><a href="/pathfinding/">Explore A* path planning <span aria-hidden="true">↗</span></a></section>
   </main>
   <!-- argos:footer -->
   <script type="module" src="/src/movement-main.js"></script>

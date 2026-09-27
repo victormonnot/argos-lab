@@ -1,5 +1,5 @@
-/* Workshop 01: a reading surface around the unchanged consensus experiment. */
-.consensus-workshop {
+/* Science studio reading and experiment layout, shared by workshops 01 and 02. */
+.lesson-workshop {
   --paper: #f3f4f1;
   --panel: #fbfcfa;
   --ink: #273438;
@@ -15,17 +15,17 @@
   color-scheme: light;
 }
 
-.consensus-page { max-width: 1316px; margin: auto; padding: 0 42px; }
-.consensus-page *, .consensus-page *::before, .consensus-page *::after { box-sizing: border-box; }
-.consensus-page :is(section, details, [id]) { scroll-margin-top: 24px; }
-.consensus-page :is(h1, h2, h3, p, figure, dl) { margin: 0; }
-.consensus-page :is(h1, h2, h3, strong) { font-weight: 400; }
-.consensus-page h1 { font-size: clamp(42px, 4.5vw, 64px); line-height: 1.08; letter-spacing: -.055em; }
-.consensus-page h2 { font-size: clamp(28px, 3vw, 40px); line-height: 1.18; letter-spacing: -.035em; text-wrap: balance; }
-.consensus-page h3 { font-size: 23px; line-height: 1.3; letter-spacing: -.025em; }
-.consensus-page a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 5px; }
-.consensus-page :is(button, select, input) { font: inherit; color: inherit; }
-.consensus-page :where(button, select, input) {
+.lesson-page { max-width: 1316px; margin: auto; padding: 0 42px; }
+.lesson-page *, .lesson-page *::before, .lesson-page *::after { box-sizing: border-box; }
+.lesson-page :is(section, details, [id]) { scroll-margin-top: 24px; }
+.lesson-page :is(h1, h2, h3, p, figure, dl) { margin: 0; }
+.lesson-page :is(h1, h2, h3, strong) { font-weight: 400; }
+.lesson-page h1 { font-size: clamp(42px, 4.5vw, 64px); line-height: 1.08; letter-spacing: -.055em; }
+.lesson-page h2 { font-size: clamp(28px, 3vw, 40px); line-height: 1.18; letter-spacing: -.035em; text-wrap: balance; }
+.lesson-page h3 { font-size: 23px; line-height: 1.3; letter-spacing: -.025em; }
+.lesson-page a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.lesson-page :is(button, select, input) { font: inherit; color: inherit; }
+.lesson-page :where(button, select, input) {
   min-height: 44px;
   border: 1px solid var(--line);
   border-radius: 2px;
@@ -33,25 +33,25 @@
   padding: 9px 14px;
   font-size: 13px;
 }
-.consensus-page :where(button, select, summary) { cursor: pointer; }
-.consensus-page :where(button:hover:not(:disabled), select:hover) { border-color: var(--blue); background: #edf2f4; }
-.consensus-page :where(button:disabled, input:disabled, select:disabled) { cursor: default; opacity: .48; }
-.consensus-page :focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; }
-.consensus-page :where(button[aria-pressed='true']) { border-color: var(--blue); background: #eaf0f3; color: #355c7b; }
-.consensus-page .eyebrow { display: block; color: var(--muted); font: 400 11px/1.6 var(--mono); letter-spacing: .09em; text-transform: uppercase; }
-.consensus-page .small { color: var(--muted); font-size: 12px; line-height: 1.65; }
-.consensus-page .muted { color: var(--muted); }
+.lesson-page :where(button, select, summary) { cursor: pointer; }
+.lesson-page :where(button:hover:not(:disabled), select:hover) { border-color: var(--blue); background: #edf2f4; }
+.lesson-page :where(button:disabled, input:disabled, select:disabled) { cursor: default; opacity: .48; }
+.lesson-page :focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; }
+.lesson-page :where(button[aria-pressed='true']) { border-color: var(--blue); background: #eaf0f3; color: #355c7b; }
+.lesson-page .eyebrow { display: block; color: var(--muted); font: 400 11px/1.6 var(--mono); letter-spacing: .09em; text-transform: uppercase; }
+.lesson-page .small { color: var(--muted); font-size: 12px; line-height: 1.65; }
+.lesson-page .muted { color: var(--muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .skip-link { position: fixed; top: 12px; left: 12px; z-index: 20; padding: 12px 18px; background: var(--ink); color: var(--panel); opacity: 0; pointer-events: none; }
 .skip-link:focus { opacity: 1; pointer-events: auto; }
 
 /* Keep the workshop selector accessible without making it the page's headline. */
-.consensus-page .argos-workshop-topbar { margin-top: 24px; border: 0; }
-.consensus-page .argos-workshop-nav { padding: 0 0 22px; border-bottom: 1px solid var(--line); }
-.consensus-page .argos-workshop-current strong { font-size: 14px; }
-.consensus-page .argos-workshop-number { font-size: 23px; }
-.consensus-page .argos-workshop-jump select { min-height: 44px; }
-.consensus-page .argos-workshop-links a { display: inline-flex; align-items: center; min-height: 36px; }
+.lesson-page .argos-workshop-topbar { margin-top: 24px; border: 0; }
+.lesson-page .argos-workshop-nav { padding: 0 0 22px; border-bottom: 1px solid var(--line); }
+.lesson-page .argos-workshop-current strong { font-size: 14px; }
+.lesson-page .argos-workshop-number { font-size: 23px; }
+.lesson-page .argos-workshop-jump select { min-height: 44px; }
+.lesson-page .argos-workshop-links a { display: inline-flex; align-items: center; min-height: 36px; }
 
 .intro { padding: 74px 0 36px; text-align: center; }
 .intro h1 { margin-top: 22px; }
@@ -76,8 +76,8 @@
 .prediction > div > p:last-child { margin-top: 12px; color: var(--muted); font-size: 14px; }
 .prediction-choices { display: flex; flex-wrap: wrap; gap: 8px; }
 .prediction #prediction-feedback { min-height: 40px; margin-top: 15px; font-size: 12px; }
-.consensus-page .argos-workshop-sections { justify-content: space-between; gap: 16px; padding: 0; border: 0; }
-.consensus-page .argos-workshop-sections a { display: flex; justify-content: space-between; align-items: center; gap: 28px; min-height: 44px; padding: 6px 0; font-size: 13px; }
+.lesson-page .argos-workshop-sections { justify-content: space-between; gap: 16px; padding: 0; border: 0; }
+.lesson-page .argos-workshop-sections a { display: flex; justify-content: space-between; align-items: center; gap: 28px; min-height: 44px; padding: 6px 0; font-size: 13px; }
 .argos-workshop-sections a span { color: var(--blue); }
 .method-profile { margin-top: 20px; padding: 20px 0; border-block: 1px solid var(--line); }
 .method-profile summary { display: flex; align-items: center; gap: 30px; list-style: none; font-size: 14px; }
@@ -161,15 +161,15 @@
 .chart-footer { margin-top: 20px; }
 .chart-footer p { min-height: 40px; color: var(--muted); font-size: 12px; }
 .chart-footer > div { display: flex; flex-wrap: wrap; gap: 4px 24px; margin-top: 8px; }
-.consensus-page .text-button { min-height: 44px; padding: 8px 0; background: transparent; border: 0; border-bottom: 1px solid var(--line); color: var(--blue); font-size: 12px; }
+.lesson-page .text-button { min-height: 44px; padding: 8px 0; background: transparent; border: 0; border-bottom: 1px solid var(--line); color: var(--blue); font-size: 12px; }
 .table-scroll { overflow-x: auto; }
-.consensus-page table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
-.consensus-page th { padding: 10px 8px; color: var(--muted); font-weight: 400; border-bottom: 1px solid var(--line); }
-.consensus-page td { padding: 7px 8px; border-bottom: 1px solid #e0e5e2; font-variant-numeric: tabular-nums; }
-.consensus-page th:first-child, .consensus-page td:first-child { padding-left: 0; }
-.consensus-page td button { padding: 4px 9px; min-height: 32px; background: transparent; border-color: transparent; font: 11px/1.5 var(--mono); }
-.consensus-page tr.selected { background: #eaf0f3; }
-.consensus-page tr.selected td:first-child { box-shadow: inset 2px 0 var(--blue); padding-left: 5px; }
+.lesson-page table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+.lesson-page th { padding: 10px 8px; color: var(--muted); font-weight: 400; border-bottom: 1px solid var(--line); }
+.lesson-page td { padding: 7px 8px; border-bottom: 1px solid #e0e5e2; font-variant-numeric: tabular-nums; }
+.lesson-page th:first-child, .lesson-page td:first-child { padding-left: 0; }
+.lesson-page td button { padding: 4px 9px; min-height: 32px; background: transparent; border-color: transparent; font: 11px/1.5 var(--mono); }
+.lesson-page tr.selected { background: #eaf0f3; }
+.lesson-page tr.selected td:first-child { box-shadow: inset 2px 0 var(--blue); padding-left: 5px; }
 .agent-detail { margin-top: 20px !important; font-size: 12px; line-height: 1.8; }
 .state-panel > .small { margin-top: 10px; }
 .exchange-note { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px 32px; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); }
@@ -236,7 +236,7 @@
 .lesson-next a { display: inline-flex; align-items: center; gap: 40px; flex-shrink: 0; min-height: 48px; padding: 10px 0; border-bottom: 1px solid var(--line); text-decoration: none; font-size: 14px; }
 
 @media (max-width: 1100px) {
-  .consensus-page { padding-inline: 32px; }
+  .lesson-page { padding-inline: 32px; }
   .lab-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; }
   .visual-toolbar, .visual-caption, .transport, .metrics { padding-inline: 18px; }
   .metrics { grid-template-columns: 1fr 1fr; }
@@ -275,9 +275,9 @@
 }
 
 @media (max-width: 600px) {
-  .consensus-page { padding-inline: 20px; }
-  .consensus-page .argos-workshop-nav { padding-bottom: 20px; }
-  .consensus-page .argos-workshop-mode { font-size: 9px; }
+  .lesson-page { padding-inline: 20px; }
+  .lesson-page .argos-workshop-nav { padding-bottom: 20px; }
+  .lesson-page .argos-workshop-mode { font-size: 9px; }
   .intro { padding-block: 48px 28px; }
   .intro-question { font-size: 21px; }
   .intro-copy { font-size: 14px; }
@@ -291,8 +291,8 @@
   .prediction h2 { font-size: 25px; }
   .prediction-choices { gap: 8px; }
   .prediction-choices button { padding-inline: 11px; font-size: 12px; }
-  .consensus-page .argos-workshop-sections { gap: 5px 18px; }
-  .consensus-page .argos-workshop-sections a { gap: 10px; font-size: 12px; }
+  .lesson-page .argos-workshop-sections { gap: 5px 18px; }
+  .lesson-page .argos-workshop-sections a { gap: 10px; font-size: 12px; }
   .method-profile summary { flex-wrap: wrap; gap: 12px; position: relative; padding-right: 25px; }
   .method-summary { flex-basis: 100%; font-size: 11px; }
   .method-profile summary::after { position: absolute; right: 0; top: 0; }
@@ -317,7 +317,7 @@
   .configuration .panel-heading .eyebrow { font-size: 10px; }
   .inspection-grid { margin-top: 35px; }
   .chart-panel .panel-heading { flex-wrap: wrap; gap: 15px; }
-  .consensus-page th, .consensus-page td { padding-inline: 5px; font-size: 11px; }
+  .lesson-page th, .lesson-page td { padding-inline: 5px; font-size: 11px; }
   #state-table th:nth-child(3) { min-width: 95px; }
   .exchange-note { gap: 12px; }
   .exchange-note > span { display: block; }
@@ -340,5 +340,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .consensus-workshop { scroll-behavior: auto; }
+  .lesson-workshop { scroll-behavior: auto; }
 }

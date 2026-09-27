@@ -67,14 +67,15 @@ export function setWorkshopDrone(drone, { position, heading = 0, phase = 0, acti
 }
 
 /** Decorative frame lies outside the declared playable rectangle. */
-export function createWorkshopStage(THREE, scene, renderer, { center = [0, 0], size = [12, 10], grid = 1 } = {}) {
+export function createWorkshopStage(THREE, scene, renderer, { center = [0, 0], size = [12, 10], grid = 1, palette = {} } = {}) {
   const [cx, cz] = center, [width, depth] = size;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
   const stage = new THREE.Group(); stage.name = 'illustrative-workshop-yard'; scene.add(stage);
   const material = (color, options = {}) => new THREE.MeshStandardMaterial({ color, roughness: .9, ...options });
-  const floor = material('#4b685d'), edge = material('#203c32'), trim = material('#829582'), metal = material('#597a6c');
+  const floor = material(palette.floor ?? '#4b685d'), edge = material(palette.edge ?? '#203c32'),
+    trim = material(palette.trim ?? '#829582'), metal = material(palette.metal ?? '#597a6c');
   const box = (dimensions, mat, position) => {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(...dimensions), mat); mesh.position.set(...position);
     mesh.castShadow = true; mesh.receiveShadow = true; stage.add(mesh); return mesh;
@@ -85,7 +86,7 @@ export function createWorkshopStage(THREE, scene, renderer, { center = [0, 0], s
   for (let x = -width / 2; x <= width / 2 + 1e-6; x += grid) gridPoints.push(cx + x, .003, cz - depth / 2, cx + x, .003, cz + depth / 2);
   for (let z = -depth / 2; z <= depth / 2 + 1e-6; z += grid) gridPoints.push(cx - width / 2, .003, cz + z, cx + width / 2, .003, cz + z);
   const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(gridPoints, 3));
-  stage.add(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: '#a2bba2', transparent: true, opacity: .14 })));
+  stage.add(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: palette.grid ?? '#a2bba2', transparent: true, opacity: .14 })));
   for (const side of [-1, 1]) {
     box([width + .5, .11, .12], trim, [cx, -.015, cz + side * (depth / 2 + .22)]);
     box([.12, .11, depth + .5], trim, [cx + side * (width / 2 + .22), -.015, cz]);
@@ -94,10 +95,10 @@ export function createWorkshopStage(THREE, scene, renderer, { center = [0, 0], s
   for (const x of [-1, 1]) for (const z of [-1, 1]) {
     const px = cx + x * (width / 2 + .22), pz = cz + z * (depth / 2 + .22);
     box([.18, .48, .18], metal, [px, .24, pz]);
-    box([.2, .065, .2], material('#cee4c8', { emissive: '#779d7d', emissiveIntensity: .3 }), [px, .49, pz]);
+    box([.2, .065, .2], material(palette.lamp ?? '#cee4c8', { emissive: palette.lampEmissive ?? '#779d7d', emissiveIntensity: .3 }), [px, .49, pz]);
   }
-  const hemi = new THREE.HemisphereLight('#d5f1e7', '#26362c', 2); scene.add(hemi);
-  const sun = new THREE.DirectionalLight('#ffedcc', 3.2);
+  const hemi = new THREE.HemisphereLight(palette.sky ?? '#d5f1e7', palette.ground ?? '#26362c', 2); scene.add(hemi);
+  const sun = new THREE.DirectionalLight(palette.sun ?? '#ffedcc', 3.2);
   const span = Math.max(width, depth);
   sun.position.set(cx - span * .3, span, cz + span * .45); sun.target.position.set(cx, 0, cz);
   sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);

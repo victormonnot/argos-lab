@@ -200,6 +200,10 @@ controller is **decentralized and reactive**, with **synchronous, discrete-time*
 updates. Each agent knows the static map and senses only nearby peers. No message
 network or shared route planner is modeled.
 
+Start with an illustrated first step: the middle agent's command is capped at
+`1 m/s`, moving it two centimetres in `0.02 s`. Four guided comparisons follow;
+the full rule, assumptions and source are available in expandable explanations.
+
 1. Compare open ground with a corridor. Both reference runs reach the region.
 2. Load the U-shaped trap. The agents stall before arrival; inspect attraction
    and repulsion cancelling near the closing wall.

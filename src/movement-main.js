@@ -1,5 +1,3 @@
-import './style.css';
-import './movement.css';
 import {
   DT, GOAL_RADIUS, DEFAULT_GAINS, MOVEMENT_SCENARIOS, STARTS,
   createMovementRun, stepMovement, resetMovement, finishMovement,
@@ -82,7 +80,7 @@ const guidedCases = {
 };
 document.querySelectorAll('[data-movement-case]').forEach((button) => button.addEventListener('click', () => {
   configure(guidedCases[button.dataset.movementCase]);
-  $('#movement-experiment').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#movement-experiment').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
 }));
 $('#movement-comparisons').addEventListener('toggle', () => {
   if (!$('#movement-comparisons').open || $('#movement-comparison-table').children.length) return;
@@ -90,7 +88,8 @@ $('#movement-comparisons').addEventListener('toggle', () => {
 });
 
 function renderChart() {
-  const width = 620, height = 210, left = 42, top = 14, right = 16, bottom = 36;
+  const width = Math.max(240, Math.round($('#movement-chart').clientWidth));
+  const height = 220, left = 42, top = 18, right = 20, bottom = 36;
   const maxTime = Math.max(2, Math.ceil(run.step * DT / 2) * 2);
   const maxDistance = Math.max(9, Math.ceil(Math.max(...run.history.map((point) => point.maxGoalDistance))));
   const x = (time) => left + time / maxTime * (width - left - right);
@@ -98,9 +97,9 @@ function renderChart() {
   const points = run.history.map((point) => `${x(point.time)},${y(point.maxGoalDistance)}`).join(' ');
   $('#movement-chart').innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Farthest agent distance from the goal over ${format(run.step * DT, 2)} simulated seconds">
     ${[0, 0.5, 1].map((fraction) => `<line x1="${left}" x2="${width - right}" y1="${y(maxDistance * fraction)}" y2="${y(maxDistance * fraction)}" stroke="#e0e5e2"/><text x="${left - 9}" y="${y(maxDistance * fraction) + 4}" text-anchor="end">${(maxDistance * fraction).toFixed(1)}</text>`).join('')}
-    <line x1="${left}" x2="${width - right}" y1="${y(GOAL_RADIUS)}" y2="${y(GOAL_RADIUS)}" stroke="#b7804c" stroke-dasharray="5 4"/>
-    <polyline points="${points}" fill="none" stroke="#167963" stroke-width="2.5"/>
-    <circle cx="${x(run.step * DT)}" cy="${y(run.history.at(-1).maxGoalDistance)}" r="3" fill="#167963"/>
+    <line x1="${left}" x2="${width - right}" y1="${y(GOAL_RADIUS)}" y2="${y(GOAL_RADIUS)}" stroke="#9b6547" stroke-dasharray="5 4"/>
+    <polyline points="${points}" fill="none" stroke="#446e91" stroke-width="2.5"/>
+    <circle cx="${x(run.step * DT)}" cy="${y(run.history.at(-1).maxGoalDistance)}" r="3" fill="#446e91"/>
     ${[0, 0.5, 1].map((fraction) => `<text x="${x(maxTime * fraction)}" y="${height - 14}" text-anchor="middle">${(maxTime * fraction).toFixed(0)} s</text>`).join('')}
     </svg>`;
 }
@@ -156,7 +155,40 @@ function render() {
   });
   renderChart(); renderInspection(); view.update(run, selectedAgent);
 }
-window.addEventListener('pagehide', () => { stop(); view.dispose(); });
+// Reading and plot layout observe the run; neither advances or configures it.
+function revealFragment() {
+  let id;
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+  const target = document.getElementById(id);
+  if (!target) return;
+  let opened = false;
+  for (let ancestor = target; ancestor; ancestor = ancestor.parentElement) {
+    if (ancestor instanceof HTMLDetailsElement && !ancestor.open) {
+      ancestor.open = true;
+      opened = true;
+    }
+  }
+  if (opened) requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+}
+let chartWidth = Math.round($('#movement-chart').clientWidth);
+let chartFrame = null;
+const chartResize = new ResizeObserver(() => {
+  const nextWidth = Math.round($('#movement-chart').clientWidth);
+  if (nextWidth !== chartWidth) {
+    chartWidth = nextWidth;
+    cancelAnimationFrame(chartFrame);
+    chartFrame = requestAnimationFrame(renderChart);
+  }
+});
+chartResize.observe($('#movement-chart'));
+window.addEventListener('hashchange', revealFragment);
+function dispose() {
+  stop(); view.dispose(); chartResize.disconnect(); cancelAnimationFrame(chartFrame);
+  window.removeEventListener('hashchange', revealFragment);
+}
+window.addEventListener('pagehide', dispose);
+if (import.meta.hot) import.meta.hot.dispose(dispose);
 // A back/forward-cache restore must recreate the disposed view and listeners.
 window.addEventListener('pageshow', (event) => { if (event.persisted) window.location.reload(); });
 syncInputs(); render();
+revealFragment();

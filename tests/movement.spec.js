@@ -8,6 +8,18 @@ const snapshot = async (page) => ({
   chart: await page.locator('#movement-chart').innerHTML(),
   clearance: await page.locator('#movement-clearance').textContent(),
 });
+const readingSnapshot = async (page) => ({
+  ...await snapshot(page),
+  table: await page.locator('#movement-table').innerHTML(),
+  vectors: await page.locator('#movement-vectors').innerHTML(),
+  inputs: await page.locator('#movement-inputs').textContent(),
+  status: await page.locator('#movement-status').textContent(),
+  outcome: await page.locator('#movement-outcome').textContent(),
+  selection: await page.locator('#movement-agent').inputValue(),
+  map: await page.locator('#movement-preset').inputValue(),
+  drafts: await page.locator('#movement-gains input').evaluateAll((inputs) => inputs.map((input) => [input.id, input.value])),
+  gainLabels: await page.locator('#movement-gains output').allTextContents(),
+});
 
 test.beforeEach(async ({ page }) => {
   const collected = [];
@@ -149,4 +161,90 @@ test('2D and textual controls remain usable when WebGL is unavailable', async ({
   await page.locator('#movement-finish').click();
   await expect(page.locator('#movement-status')).toHaveText('Arrived');
   await expect(page.locator('[data-position-x="1"]')).toBeVisible();
+});
+
+test('reading method and model details preserves the run, inspected decision and draft gains', async ({ page }) => {
+  await page.locator('#gain-obstacle').fill('0.3');
+  await page.getByRole('button', { name: 'Apply gains & reset' }).click();
+  await page.locator('#movement-step').click();
+  await page.locator('#movement-step').click();
+  await page.locator('#movement-agent').selectOption('2');
+  await page.locator('#gain-obstacle').fill('0.4');
+  await page.locator('#gain-separation').fill('0.045');
+  const beforeReading = await readingSnapshot(page);
+  expect(beforeReading.step).toBe(2);
+  expect(beforeReading.selection).toBe('2');
+  expect(beforeReading.status).toBe('Paused');
+
+  for (const id of ['movement-method-details', 'movement-model-details']) {
+    const disclosure = page.locator(`#${id}`);
+    await expect(disclosure).not.toHaveAttribute('open', '');
+    await disclosure.locator(':scope > summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(disclosure).toHaveAttribute('open', '');
+    expect(await readingSnapshot(page)).toEqual(beforeReading);
+    await page.keyboard.press('Space');
+    await expect(disclosure).not.toHaveAttribute('open', '');
+    expect(await readingSnapshot(page)).toEqual(beforeReading);
+  }
+
+  await page.locator('#movement-step').click();
+  await expect(page.locator('#movement-step-count')).toHaveText('3');
+  await expect(page.locator('#gain-obstacle')).toHaveValue('0.4');
+  await page.locator('#movement-reset').click();
+  await expect(page.locator('#gain-obstacle')).toHaveValue('0.3');
+  await expect(page.locator('#gain-separation')).toHaveValue('0.02');
+});
+
+test('bookmarks reveal hidden comparisons and equations without changing the active experiment', async ({ page }) => {
+  await page.goto('/movement/#movement-comparison-table');
+  await expect(page.locator('#movement-comparisons')).toHaveAttribute('open', '');
+  await expect(page.locator('#movement-comparison-table')).toBeVisible();
+  await expect(page.locator('#movement-comparison-table tr')).toHaveCount(5);
+  await expect(page.locator('#movement-comparison-table')).toContainText('Stalled');
+  await expect(page.locator('#movement-comparison-table')).toContainText('Collision');
+
+  await page.locator('#movement-step').click();
+  await page.locator('#gain-attraction').fill('0.9');
+  const beforeHashChange = await readingSnapshot(page);
+  await page.evaluate(() => { window.location.hash = 'movement-equation'; });
+  await expect(page.locator('#movement-model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#movement-equation')).toBeVisible();
+  expect(await readingSnapshot(page)).toEqual(beforeHashChange);
+
+  await page.reload();
+  await expect(page.locator('#movement-model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#movement-equation')).toBeVisible();
+  await expect(page.locator('#movement-step-count')).toHaveText('0');
+  await expect(page.locator('#gain-attraction')).toHaveValue('0.6');
+});
+
+test('the lesson and native technical disclosures remain readable without JavaScript', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL, viewport: { width: 390, height: 844 } });
+  try {
+    const page = await context.newPage();
+    const stylesheetRequests = [];
+    page.on('response', (response) => {
+      if (response.request().resourceType() === 'stylesheet' && response.ok()) stylesheetRequests.push(response.url());
+    });
+    await page.goto('/movement/');
+    await expect(page.locator('#movement-title')).toContainText('Artificial Potential Fields');
+    await expect(page.locator('.movement-example')).toBeVisible();
+    await expect(page.locator('#movement-example-caption')).toContainText('A2 at the start of the corridor');
+    await expect(page.locator('.no-script-note')).toContainText('JavaScript');
+    await expect(page.locator('.no-script-note')).toBeVisible();
+    expect(stylesheetRequests.some((url) => /\/(?:lesson|movement[^/]*)\.css(?:\?|$)/.test(url))).toBe(true);
+
+    await page.locator('#movement-method-details > summary').click();
+    await expect(page.locator('#movement-method-details')).toHaveAttribute('open', '');
+    await expect(page.locator('#movement-method-details')).toContainText(/synchronous/i);
+    await page.locator('#movement-model-details > summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#movement-equation')).toBeVisible();
+    await expect(page.locator('#movement-equation')).toContainText('0.02');
+    await expect(page.locator('#movement-model .reference a')).toHaveAttribute('href', 'https://khatib.stanford.edu/publications/pdfs/Khatib_1986_IJRR.pdf');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  } finally {
+    await context.close();
+  }
 });

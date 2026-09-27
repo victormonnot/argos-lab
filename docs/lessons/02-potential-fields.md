@@ -48,6 +48,35 @@ Walls are capsules: a line segment thickened by a disk of radius `0.10 m`.
 The U opens to the left. A path can go back out and around the walls to the
 goal on the right. The APF controller does not search for that path.
 
+## Reading structure
+
+The page opens with a worked example for the middle agent, A2, at the start of
+the reference corridor. Its goal contribution is `(4.8, 0) m/s`; the peer
+contributions cancel and walls are outside repulsion range. The speed cap gives
+`(1, 0) m/s`, so one `0.02 s` step moves it from `(-4, 0)` to `(-3.98, 0)`:
+two centimetres toward the goal. The drawings illustrate these three operations;
+their arrow lengths are schematic, not a physical force measurement.
+
+A prediction about cancelling commands leads into the experiment. The controls,
+outcome, progress plot, individual command components and evaluator state remain
+directly available. Four illustrated exercises compare the known map, the local
+trap, disabled peer repulsion and disabled wall repulsion. The diagrams explain
+the question; the experiment supplies measured trajectories and outcomes.
+
+The essential assumptions remain visible above the experiment, with definitions
+in **Method & assumptions**. **Read the rule, assumptions & source** expands the
+full equation, symbol key, success and stall criteria, and primary reference.
+The limits of local avoidance remain visible when this section is closed.
+Opening explanations or computing reference comparisons does not change the
+current run or draft gains. With JavaScript, fragment links open containing
+disclosures before scrolling to the requested explanation or table.
+
+The worked example, exercises and technical text remain styled and readable
+without JavaScript; running the experiment requires it. The light 2D/3D views
+use the same agent and contribution colors. Map coordinates retain one scale
+for both axes, while labels and plot text stay readable on narrow screens.
+The final link introduces A* in a separate grid-based planning experiment.
+
 ## Declared update rule
 
 For an agent at `p`, assigned goal `g`, and each contributing surface:
@@ -133,7 +162,7 @@ total travelled path length; these are evaluation measurements only.
   **Whole site** and **Follow A1/A2/A3** frame the same snapshot; following tracks
   the selected agent while preserving the learner's orbit angle. Rotor orientation
   uses model time only. Neither view adds aircraft dynamics or simulated altitude.
-- Both workshops are reachable through ordinary page links. Navigation/reload
+- Other workshops are reachable through ordinary page links. Navigation/reload
   starts a new run; no persistence or cross-page replay is implemented. Repeating
   the same configuration reproduces the same movement trace.
 
@@ -156,7 +185,9 @@ limits, synchronous symmetry, swept contacts, deterministic reset, nominal
 arrival, the measured local trap, and contact failures. Browser verification
 covers core controls, navigation, outcomes, state-preserving 2D/3D switching,
 keyboard operation, narrow layout and the WebGL-unavailable fallback. Results
-and actual checks are recorded separately in the result record.
+and actual model checks are recorded separately in the result record. Reading
+checks also cover keyboard disclosures, bookmarks into hidden content and
+styled reading without JavaScript, while preserving the active experiment.
 
 Primary method source: Oussama Khatib (1986),
 [Real-Time Obstacle Avoidance for Manipulators and Mobile Robots](https://khatib.stanford.edu/publications/pdfs/Khatib_1986_IJRR.pdf),

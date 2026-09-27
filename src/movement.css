@@ -1,10 +1,125 @@
-.movement-page{font-size:16px}.movement-intro{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:48px;align-items:center;padding:28px 0 34px}.movement-intro h1{font-size:38px;line-height:1.15;letter-spacing:-1.3px;margin:14px 0}.movement-intro h1 span{display:block;font-size:20px;letter-spacing:-.4px;line-height:1.5;margin-top:9px}.movement-intro p{font-size:16px;color:var(--muted)}.movement-prediction{border-left:2px solid #bfd2bf;padding-left:22px}.movement-prediction strong{font-size:14px}.movement-prediction p{font-size:15px;margin:8px 0}.movement-prediction a{font-size:14px;color:var(--teal);text-underline-offset:3px}.movement-lab{display:grid;grid-template-columns:minmax(0,1fr) 310px;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}.movement-visual{background:#101f22;min-width:0;color:#e4f0e9;display:flex;flex-direction:column}.movement-toolbar{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;gap:12px;font-size:14px}#movement-viewport{height:430px;min-height:360px;flex:1;position:relative;min-width:0}.movement-svg,.movement-three{width:100%;height:100%;position:absolute;inset:0}.movement-three[hidden]{display:none}.movement-three canvas{display:block;width:100%;height:100%;touch-action:none}.movement-legend{display:flex;gap:10px 18px;flex-wrap:wrap;padding:10px 22px 0;font-size:12px;color:#b6c9be}.movement-legend span{display:flex;gap:6px;align-items:center}.movement-legend i{height:2px;width:14px;background:white}.movement-legend .goal-key{background:#70d8bf}.movement-legend .wall-key{background:#edaa72}.movement-legend .peer-key{background:#a29be9}.movement-caption{padding:10px 22px 16px;color:#b3c7bb;font-size:12px;line-height:1.6}.movement-config{padding:23px;min-width:0}.movement-config>label,.movement-config legend{font-size:14px;font-weight:600}.movement-config>select{width:100%;margin:10px 0 6px;font-size:14px}.movement-page .small{font-size:13px}.movement-config form{margin-top:23px}.movement-config fieldset>label{display:flex;justify-content:space-between;font-size:14px;margin-top:14px;gap:10px}.movement-config output{font:13px ui-monospace,monospace;color:var(--teal)}.movement-config input[type=range]{width:100%;accent-color:#347459;padding:0;margin:12px 0 5px}.movement-config .wide{font-size:13px;line-height:1.4;margin:12px 0}.movement-constants{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;font-size:12px;color:var(--muted);padding:17px 0 8px;border-top:1px solid var(--line);margin-top:18px}.movement-constants strong{display:block;font:15px ui-monospace,monospace;color:var(--ink);margin-bottom:5px}.movement-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;padding:22px 0}.movement-metrics>div{display:flex;flex-direction:column;border-right:1px solid var(--line);padding-right:18px}.movement-metrics>div:last-child{border:0}.movement-metrics>div>span{font:11px ui-monospace,monospace;color:#64796b;letter-spacing:.7px}.movement-metrics strong{font:26px ui-monospace,monospace;margin:11px 0 7px;overflow-wrap:anywhere}.movement-metrics small{font-size:12px;color:var(--muted);line-height:1.5}.movement-outcome{background:#eaf0e3;border-left:3px solid #8fac70;padding:15px 18px;font-size:15px;margin-bottom:22px}.movement-outcome[data-outcome=stalled],.movement-outcome[data-outcome=collision],.movement-outcome[data-outcome=budget]{background:#f8eee2;border-color:#c39562;color:#785229}.movement-inspection{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px}#movement-chart svg{width:100%;height:auto;aspect-ratio:620/200}.movement-vectors{margin:0 0 16px}.movement-vectors>div{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);gap:16px;padding:8px 0;font-size:14px}.movement-vectors dd{margin:0;font:13px ui-monospace,monospace;white-space:nowrap}.movement-vectors dt{font-weight:500}.movement-state-table{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px;margin:20px 0 32px}.movement-state-table table{font-size:14px}.movement-state-table caption{text-align:left;font-size:13px;white-space:normal;line-height:1.65;padding-bottom:17px;color:var(--muted)}.movement-state-table td{padding-top:10px;padding-bottom:10px}.movement-profile{margin-top:10px;margin-bottom:45px}.movement-cases .exercise-grid{margin-top:26px}.movement-cases .exercise-grid h3{line-height:1.4;font-size:19px}.movement-cases .exercise-grid p{font-size:15px}.movement-cases .exercise-grid button{font-size:13px}.movement-page .model-section p{font-size:15px}.movement-page .model-facts h3{font-size:16px}.movement-equation{font-size:15px;line-height:2}.movement-page .model-content .reference{font-size:13px}.movement-page .comparison-details>p{font-size:14px}.movement-page .comparison-details table{font-size:13px}.movement-page .comparison-details caption{font-size:12px}.movement-node{cursor:pointer;outline:none}.movement-node:focus-visible circle:last-of-type{stroke:white;stroke-width:4}.movement-3d-labels{position:absolute;inset:0;pointer-events:none}.movement-3d-labels button{position:absolute;transform:translate(-50%,calc(-100% - 12px));background:#162b24ec;border:1px solid #6e8e7d;pointer-events:auto;font-size:12px;padding:4px 6px}.movement-3d-labels button[aria-pressed=true]{border-color:#f5f8ed}.movement-3d-labels button:hover:not(:disabled){background:#263f34}.movement-webgl-message{padding:30px;line-height:1.8;color:#e4f0e9;font-size:16px;max-width:480px;margin:auto}.movement-page .status{white-space:normal;font-size:12px}.movement-page .transport button{font-size:13px}.movement-page .speed-control{font-size:12px}.movement-page .speed-control select{max-width:165px}
-@media(max-width:1050px){.movement-intro{gap:25px;grid-template-columns:1fr 270px}.movement-lab{grid-template-columns:minmax(0,1fr) 280px}.movement-config{padding:20px}.movement-metrics{gap:15px}.movement-metrics strong{font-size:22px}.movement-metrics>div>span{font-size:10px}.movement-equation{font-size:13px}}
-@media(max-width:850px){.movement-lab{grid-template-columns:1fr}.movement-config{display:grid;grid-template-columns:1fr 1fr;column-gap:30px}.movement-config form{grid-column:2;grid-row:1 / span 4;margin-top:0}.movement-config .movement-constants{grid-column:1}.movement-config>p:last-of-type{grid-column:2}.movement-config>button{grid-column:1 / -1}#movement-viewport{flex:auto;height:400px}.movement-intro{grid-template-columns:1fr}.movement-prediction{max-width:580px}.movement-inspection{grid-template-columns:1fr}.movement-page .model-section{gap:24px}.movement-equation{font-size:15px}}
-@media(max-width:580px){.movement-intro{padding:20px 0 28px;gap:18px}.movement-intro h1{font-size:32px;letter-spacing:-1px}.movement-intro h1 span{font-size:18px}.movement-intro p{font-size:15px}.movement-config{display:block}.movement-config form{margin-top:20px}#movement-viewport{height:290px;min-height:290px}.movement-toolbar{padding:15px}.movement-legend{font-size:12px;gap:9px;padding:8px 15px 0}.movement-caption{padding:10px 15px 14px}.movement-metrics{grid-template-columns:1fr 1fr;gap:20px 15px}.movement-metrics>div:nth-child(2){border-right:0}.movement-metrics>div>span{font-size:10px;line-height:1.5}.movement-metrics strong{font-size:24px}.movement-metrics small{font-size:12px}.movement-vectors>div{font-size:13px;gap:8px}.movement-vectors dd{font-size:12px}.movement-outcome{font-size:14px}.movement-state-table{padding:15px}.movement-equation{font-size:12px;padding:14px 10px;overflow-wrap:anywhere}.movement-page .section-heading h2{max-width:none}.movement-page .movement-inspection .panel-heading{align-items:flex-start}.movement-inspection .panel-heading .small{max-width:100px;font-size:11px}.movement-page .model-section p{font-size:14px}}
+/* Workshop 02 extends the shared Science studio reading layout. */
+.movement-example {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px 54px;
+  max-width: 960px;
+  margin: 48px auto 0 !important;
+}
+.movement-example-stage { min-width: 0; }
+.example-index { color: var(--muted); font: 11px/1.6 var(--mono); }
+.movement-example-stage svg { display: block; width: 200px; max-width: 100%; height: 76px; margin: 12px auto; }
+.movement-example-stage > strong { display: block; font: 28px/1.4 var(--mono); color: var(--blue); }
+.movement-example-stage strong small { font-size: 15px; }
+.movement-example-stage p { margin-top: 10px; font-size: 13px; color: var(--muted); }
+.movement-example figcaption { grid-column: 1 / -1; color: var(--muted); font: 10px/1.8 var(--mono); }
+.movement-intro .model-boundary { max-width: 85ch; margin-inline: auto; }
+.movement-prediction > div > p { max-width: 47ch; color: var(--muted); font-size: 14px; }
+.prediction-link { display: inline-flex; align-items: center; gap: 30px; margin-top: 18px; min-height: 44px; font-size: 13px; text-decoration: none; border-bottom: 1px solid var(--line); }
+.prediction-link:hover { border-color: var(--blue); }
 
-/* The body meshes use the same disk diameter; close framing exposes their detail. */
-#movement-viewport { height: 480px; min-height: 420px; }
-.movement-3d-labels button { white-space: nowrap; border-radius: 4px; z-index: 1; }
-.movement-3d-labels button[hidden] { display: none; }
-@media(max-width:580px) { #movement-viewport { height: 360px; min-height: 360px; } }
+.movement-lab { align-items: stretch; }
+.movement-visual { display: flex; flex-direction: column; }
+.movement-toolbar { min-height: 77px; }
+#movement-viewport { position: relative; width: 100%; height: 460px; min-height: 400px; flex: 1; }
+.movement-legend { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 18px 24px 0; color: var(--muted); font-size: 11px; }
+.movement-legend span { display: flex; align-items: center; gap: 8px; }
+.movement-legend i { width: 17px; height: 2px; flex-shrink: 0; }
+.movement-legend .goal-key { background: #446e91; }
+.movement-legend .wall-key { background: #9b6547; }
+.movement-legend .peer-key { background: #78668f; }
+.movement-legend .net-key { background: repeating-linear-gradient(90deg, #273438 0 5px, transparent 5px 8px); }
+.movement-caption { padding: 16px 24px 20px; color: var(--muted); font-size: 11px; line-height: 1.8; }
+.movement-page .transport { border-bottom: 0; }
+.movement-page .transport button { font-size: 12px; }
+.movement-page .speed-control { margin-left: auto; }
+.movement-page .speed-control select { max-width: 150px; font-size: 12px; }
+.movement-config > label { display: block; font-size: 13px; margin-bottom: 8px; }
+.movement-config > .small { margin-top: 11px; }
+.movement-config fieldset > label { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; font-size: 13px; margin-top: 14px; }
+.movement-config output { color: #355c7b; font: 13px/1.5 var(--mono); }
+.movement-config input[type='range'] { display: block; width: 100%; accent-color: var(--blue); padding: 0; margin: 6px 0; border: 0; background: transparent; }
+.movement-config form .wide { margin-top: 12px; font-size: 12px; }
+.movement-constants { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 20px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); }
+.movement-constants > span { font-size: 11px; color: #586970; }
+.movement-constants strong { display: block; margin-bottom: 4px; color: var(--ink); font: 16px/1.6 var(--mono); }
+#movement-finish { margin-top: 26px; background: transparent; font-size: 12px; }
+.movement-metrics { padding: 30px 0; gap: 25px 40px; }
+.movement-metrics > div > span { display: block; color: var(--muted); font-size: 12px; }
+.movement-metrics strong { margin-top: 10px; font-size: 23px; }
+.movement-outcome { padding: 18px 24px; border-left: 2px solid var(--blue); background: #e9eff1; color: #35525e; font-size: 14px; line-height: 1.8; }
+.movement-outcome[data-outcome='stalled'],
+.movement-outcome[data-outcome='collision'],
+.movement-outcome[data-outcome='budget'] { background: #efebe5; border-color: #9b6547; color: #70513c; }
+.movement-inspection { margin-top: 42px; }
+.movement-inspection .panel-heading { align-items: flex-start; }
+.movement-inspection .chart-panel .panel-heading { display: block; }
+.movement-inspection .chart-panel .panel-heading > .small { display: block; margin-top: 10px; }
+#movement-chart { margin-top: 25px; }
+#movement-chart svg { display: block; width: 100%; height: auto; color: var(--muted); font: 11px var(--mono); }
+#movement-chart svg text { fill: currentColor; }
+.movement-inspection .chart-panel > .small { max-width: 56ch; margin-top: 20px; }
+.movement-vectors { margin: 0 0 20px !important; }
+.movement-vectors > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.movement-vectors dt { font-size: 13px; }
+.movement-vectors dd { margin: 0; text-align: right; font: 12px/1.6 var(--mono); }
+.movement-inspection + .experiment-boundary { margin-top: 35px !important; }
+.movement-state-table { margin-top: 24px; }
+.movement-state-table table { min-width: 610px; }
+.movement-state-table caption { text-align: left; caption-side: bottom; padding-top: 16px; color: var(--muted); font-size: 12px; }
+.movement-state-table th, .movement-state-table td { padding-block: 12px; }
+.movement-state-table tbody th button { min-height: 36px; padding: 5px 9px; font: 11px/1.6 var(--mono); }
+.movement-state-table tbody th { color: var(--ink); }
+.movement-cases .exercise-diagram { max-width: 420px; }
+.movement-cases .exercise-diagram text { font-size: 14px; }
+.movement-page .comparison-details table { min-width: 680px; }
+.movement-page .model-preview .worked-equation { font-size: 24px; text-wrap: balance; }
+.movement-page .worked-equation > :is(span, strong) { display: inline-block; white-space: nowrap; }
+.movement-equation { font-size: 17px; text-align: left; line-height: 2.2; overflow-wrap: anywhere; }
+.movement-page .lesson-next p:last-child { max-width: 53ch; }
+
+@media (max-width: 1100px) {
+  .movement-page .speed-control { margin-left: 0; }
+  .movement-caption, .movement-legend { padding-inline: 18px; }
+  .movement-metrics { gap: 25px; }
+  .movement-metrics.metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .movement-metrics strong { font-size: 21px; }
+}
+@media (max-width: 820px) {
+  .movement-example { column-gap: 25px; }
+  .movement-example-stage svg { width: 170px; }
+  #movement-viewport { flex: auto; }
+  .movement-page .speed-control { margin-left: auto; }
+  .movement-config { display: grid; grid-template-columns: 1fr 1fr; align-content: start; align-items: start; gap: 0 32px; }
+  .movement-config > .panel-heading { grid-column: 1 / -1; }
+  .movement-config > label, .movement-config > select, .movement-config > .small { grid-column: 1; }
+  .movement-config form { grid-column: 2; grid-row: 2 / span 5; margin-top: 0; }
+  .movement-config legend { margin-bottom: 0; }
+  .movement-config form .wide { margin-top: 18px; }
+  .movement-constants { grid-column: 1; }
+  #movement-finish { grid-column: 1; }
+  .movement-config > .small { margin-top: 14px; }
+}
+@media (max-width: 600px) {
+  .movement-example { grid-template-columns: 1fr; gap: 26px; max-width: 380px; margin-top: 40px !important; }
+  .movement-example-stage { display: grid; grid-template-columns: 100px 1fr; gap: 0 20px; text-align: left; align-items: center; }
+  .example-index { grid-column: 1 / -1; margin-bottom: 10px; font-size: 10px; }
+  .movement-example-stage svg { grid-column: 1; grid-row: 2 / 4; width: 100px; height: auto; margin: 0; }
+  .movement-example-stage > strong, .movement-example-stage p { grid-column: 2; }
+  .movement-example-stage > strong { font-size: 25px; }
+  .movement-example-stage p { font-size: 12px; margin-top: 6px; }
+  .movement-example figcaption { font-size: 10px; }
+  .movement-prediction h2 { font-size: 25px; }
+  #movement-viewport { height: 340px; min-height: 340px; }
+  .movement-toolbar { min-height: 70px; }
+  .movement-config { display: block; }
+  .movement-config form { margin-top: 25px; }
+  .movement-legend { gap: 11px 15px; padding: 14px 15px 0; }
+  .movement-caption { padding: 14px 15px 18px; }
+  .movement-metrics.metrics { grid-template-columns: 1fr 1fr; gap: 28px 20px; }
+  .movement-outcome { padding: 16px 18px; font-size: 13px; }
+  .movement-vectors > div { flex-wrap: wrap; gap: 4px 12px; }
+  .movement-vectors dd { margin-left: auto; }
+  .movement-page .model-preview .worked-equation { font-size: 22px; }
+  .movement-equation { font-size: 13px; }
+}
