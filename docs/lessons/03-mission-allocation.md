@@ -21,6 +21,37 @@ complete when an agent becomes unavailable?
 | Evaluator data | Completed fraction, mission time, total travel, reassignments and lost service | These describe results. The allocator receives no future failure schedule or global performance shortcut. |
 | Fidelity | Planar point motion, no obstacles or collision avoidance | 2D and 3D observe the same state. This lesson does not combine APF, flight dynamics or sensor processing with allocation. |
 
+## Reading structure
+
+The page begins with one task under the default nearest-pair greedy rule:
+A1 receives T1 at `0.0 s`, arrives at `0.8 s`, then completes service at `2.8 s`.
+The three illustrated checkpoints distinguish a target, arrival and completed
+work. The first service interval follows arrival; the drawings are schematic.
+
+A prediction about an unavailable agent leads into the experiment. Its controls,
+task progress, executor state, coordinator's dispatch matrix and event history
+remain directly available. Four illustrated questions compare fixed ownership,
+nearest-pair greedy, Hungarian matching and recovery of interrupted work. The
+first matching costs `6.8 m` for greedy and `5.2 m` for Hungarian; these values
+describe three current pairs, not total travel or mission completion times.
+The recovery drawing shows a specific greedy trace: service is interrupted at
+`5.0 s`, and A3 receives the released task at `8.3 s`. Reassignment is not itself
+completed recovery; travel and a full new service interval sequence remain.
+
+A visible summary states central authority, finite-state execution and ideal
+reports. Native **Method & assumptions** and **Read the objective, assumptions
+& source** disclosures provide the definitions, objective and primary source.
+Opening them, inspecting dispatches or computing reference comparisons does not
+change the current run. Fragment links into closed disclosures reveal their
+targets when JavaScript is available. The example, questions and technical text
+remain styled and readable without JavaScript; execution requires it.
+
+The light 2D/3D views use consistent agent colors and explicit completion and
+unavailability marks. Task states and service progress remain available as text.
+Small-screen labels retain readable type; the planar map uses one metre scale
+for both axes. The closing link leads to the separate decision-architecture
+experiment, which adds declared message delivery and local report caches.
+
 ## Scenario and task contract
 
 Three agents start at `A1=(0,0)`, `A2=(2,0)`, `A3=(0,4)` metres. Six tasks are
@@ -143,6 +174,8 @@ unavailability. Record actual outcomes before claiming an advantage. Test the
 assignment objective against an independent small exhaustive oracle, exclusive
 ownership, completion/service ordering, failure release and deterministic reset.
 Verify the controls, state visibility and view invariance in the browser.
+Browser reading checks also cover keyboard disclosures, hidden-fragment
+navigation, state preservation and styled reading without JavaScript.
 
 `npm run compare:missions` executes all six references. The JSON exporter records
 the current revision, modified-worktree flag, runtime, exact configuration and

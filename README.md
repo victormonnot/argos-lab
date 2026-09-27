@@ -228,6 +228,11 @@ the **Hungarian algorithm**, all using the same **centralized** coordinator.
 Agent execution follows a **finite-state machine (FSM)**: idle, travelling,
 servicing, or unavailable.
 
+An illustrated example follows A1 from assignment at `0.0 s` through arrival at
+`0.8 s` to completion at `2.8 s`. Four guided questions connect the allocation
+rules to their results; expandable explanations provide the full objective,
+assumptions and source.
+
 1. Inspect the first assignment matrix. Greedy chooses a total of 6.8 m;
    Hungarian finds a matching costing 5.2 m. This optimizes the current dispatch,
    not the entire multi-stop mission.

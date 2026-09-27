@@ -8,6 +8,21 @@ const snapshot = async (page) => ({
   events: await page.locator('#mission-events').innerHTML(),
   dispatch: await page.locator('#mission-costs').innerHTML(),
 });
+const readingSnapshot = async (page) => ({
+  ...await snapshot(page),
+  agents: await page.locator('#mission-agent-table').innerHTML(),
+  executor: await page.locator('#mission-agent-details').innerHTML(),
+  fsm: await page.locator('#mission-fsm').innerHTML(),
+  metrics: await page.locator('#mission-completed, #mission-time, #mission-available, #mission-distance, #mission-reassignments, #mission-lost-service').allTextContents(),
+  status: await page.locator('#mission-status').textContent(),
+  outcome: await page.locator('#mission-outcome').textContent(),
+  dispatchTitle: await page.locator('#mission-dispatch-title').textContent(),
+  dispatchSummary: await page.locator('#mission-dispatch-summary').textContent(),
+  selection: await page.locator('#mission-agent').inputValue(),
+  decision: await page.locator('#mission-decision').inputValue(),
+  policy: await page.locator('#mission-policy').inputValue(),
+  failure: await page.locator('#mission-failure').inputValue(),
+});
 async function freezeClock(page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
@@ -22,7 +37,7 @@ test.beforeEach(async ({ page }) => {
 test.afterEach(async ({ page }) => expect(browserErrors.get(page)).toEqual([]));
 
 test('initial assignment, arrival and service completion are distinct visible states', async ({ page }) => {
-  await expect(page.locator('h1')).toHaveText('Assign the work. Then finish the mission.');
+  await expect(page.locator('h1')).toContainText('Task allocation');
   const firstTask = page.locator('.mission-task[data-task="0"]');
   await expect(firstTask).toHaveAttribute('data-state', 'assigned');
   await expect(page.locator('#mission-completed')).toHaveText('0 / 6');
@@ -162,4 +177,92 @@ test('unavailable WebGL leaves the mission fully operable in 2D', async ({ page 
   await page.locator('#mission-finish').click();
   await expect(page.locator('#mission-completed')).toHaveText('6 / 6');
   await expect(page.locator('#mission-status')).toHaveText('Completed');
+});
+
+test('reading method and model disclosures preserves interrupted work and the inspected decision', async ({ page }) => {
+  await page.locator('#mission-failure').selectOption('a2');
+  await page.locator('#mission-boundary').click();
+  await page.locator('#mission-agent').selectOption('1');
+  await page.locator('#mission-decision').selectOption('first');
+  const beforeReading = await readingSnapshot(page);
+  expect(beforeReading.step).toBe('50');
+  expect(beforeReading.selection).toBe('1');
+  expect(beforeReading.status).toBe('Paused');
+  await expect(page.locator('#mission-lost-service')).toHaveText('1.0 s');
+  await expect(page.locator('.mission-task[data-task="1"]')).toHaveAttribute('data-state', 'pending');
+
+  for (const id of ['mission-method-details', 'mission-model-details']) {
+    const disclosure = page.locator(`#${id}`);
+    await expect(disclosure).not.toHaveAttribute('open', '');
+    await disclosure.locator(':scope > summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(disclosure).toHaveAttribute('open', '');
+    expect(await readingSnapshot(page)).toEqual(beforeReading);
+    await page.keyboard.press('Space');
+    await expect(disclosure).not.toHaveAttribute('open', '');
+    expect(await readingSnapshot(page)).toEqual(beforeReading);
+  }
+
+  await page.locator('#mission-step').click();
+  await expect(page.locator('#mission-step-count')).toHaveText('51');
+  await expect(page.locator('#mission-agent')).toHaveValue('1');
+  await expect(page.locator('#mission-decision')).toHaveValue('first');
+  await expect(page.locator('#mission-dispatch-title')).toHaveText('Dispatch at 0.0 s');
+});
+
+test('bookmarks reveal hidden evidence and the assignment objective without resetting the mission', async ({ page }) => {
+  await page.goto('/mission/#mission-comparison-table');
+  await expect(page.locator('#mission-comparisons')).toHaveAttribute('open', '');
+  await expect(page.locator('#mission-comparison-table')).toBeVisible();
+  await expect(page.locator('#mission-comparison-table tr')).toHaveCount(6);
+  await expect(page.locator('#mission-comparison-table')).toContainText('Blocked');
+  await expect(page.locator('#mission-comparison-table')).toContainText('Completed');
+
+  await page.locator('#mission-policy').selectOption('hungarian');
+  await page.locator('#mission-failure').selectOption('a2');
+  await page.locator('#mission-boundary').click();
+  await page.locator('#mission-agent').selectOption('2');
+  await page.locator('#mission-decision').selectOption('first');
+  const beforeHashChange = await readingSnapshot(page);
+  await page.evaluate(() => { window.location.hash = 'mission-equation'; });
+  await expect(page.locator('#mission-model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#mission-equation')).toBeVisible();
+  expect(await readingSnapshot(page)).toEqual(beforeHashChange);
+
+  await page.reload();
+  await expect(page.locator('#mission-model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#mission-equation')).toBeVisible();
+  await expect(page.locator('#mission-step-count')).toHaveText('0');
+  await expect(page.locator('#mission-policy')).toHaveValue('greedy');
+  await expect(page.locator('#mission-failure')).toHaveValue('none');
+});
+
+test('the lesson and native method disclosures remain readable without JavaScript', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL, viewport: { width: 390, height: 844 } });
+  try {
+    const page = await context.newPage();
+    const stylesheets = [];
+    page.on('response', (response) => {
+      if (response.request().resourceType() === 'stylesheet' && response.ok()) stylesheets.push(response.url());
+    });
+    await page.goto('/mission/');
+    await expect(page.locator('h1')).toContainText('Task allocation');
+    await expect(page.locator('.no-script-note')).toBeVisible();
+    await expect(page.locator('.no-script-note')).toContainText('JavaScript');
+    for (const name of ['lesson', 'mission-lesson']) {
+      expect(stylesheets.some((url) => new URL(url).pathname === `/src/${name}.css`)).toBe(true);
+    }
+
+    await page.locator('#mission-method-details > summary').click();
+    await expect(page.locator('#mission-method-details')).toHaveAttribute('open', '');
+    await expect(page.locator('#mission-method-details')).toContainText(/centralized/i);
+    await page.locator('#mission-model-details > summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#mission-equation')).toBeVisible();
+    await expect(page.locator('#mission-equation')).toContainText('at most one task per idle agent');
+    await expect(page.locator('#mission-method .reference a')).toHaveAttribute('href', 'https://doi.org/10.1002/nav.3800020109');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  } finally {
+    await context.close();
+  }
 });

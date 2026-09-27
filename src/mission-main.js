@@ -1,5 +1,3 @@
-import './style.css';
-import './mission.css';
 import { MISSION_DT, SERVICE_STEPS, FAILURE_STEP, POLICIES, createMissionRun, stepMission, resetMission, finishMission, executorObservation, compareMissions } from './mission-model.js';
 import { createMissionView } from './mission-view.js';
 
@@ -59,7 +57,7 @@ for (const mode of ['2d', '3d']) $(`#mission-${mode}`).addEventListener('click',
 document.querySelectorAll('[data-mission-case]').forEach((button) => button.addEventListener('click', () => {
   const [policy, failure] = button.dataset.missionCase.split('-');
   configure({ policy, failure: failure === 'failure' });
-  $('#mission-experiment').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#mission-experiment').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
 }));
 $('#mission-comparisons').addEventListener('toggle', () => {
   if (!$('#mission-comparisons').open || $('#mission-comparison-table').children.length) return;
@@ -132,6 +130,28 @@ function render() {
   $('#mission-events').innerHTML = run.events.slice(-30).map((event) => `<li data-event="${event.type}" data-step="${event.step}"><time>${event.time.toFixed(1)} s</time>${eventText(event)}</li>`).join('');
   renderDispatch(); view.update(run, selectedAgent);
 }
-window.addEventListener('pagehide', () => { stop(); view.dispose(); });
+// Reading an explanation observes the run; it never advances or configures it.
+function revealFragment() {
+  let id;
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+  const target = document.getElementById(id);
+  if (!target) return;
+  let opened = false;
+  for (let ancestor = target; ancestor; ancestor = ancestor.parentElement) {
+    if (ancestor instanceof HTMLDetailsElement && !ancestor.open) {
+      ancestor.open = true;
+      opened = true;
+    }
+  }
+  if (opened) requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+}
+window.addEventListener('hashchange', revealFragment);
+function dispose() {
+  stop(); view.dispose();
+  window.removeEventListener('hashchange', revealFragment);
+}
+window.addEventListener('pagehide', dispose);
+if (import.meta.hot) import.meta.hot.dispose(dispose);
 window.addEventListener('pageshow', (event) => { if (event.persisted) window.location.reload(); });
 syncInputs(); render();
+revealFragment();

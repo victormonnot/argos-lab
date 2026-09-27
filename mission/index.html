@@ -2,54 +2,174 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#10100f" />
+  <meta name="theme-color" content="#f3f4f1" />
   <meta name="description" content="Compare fixed, greedy and Hungarian task allocation. Inspect finite-state execution and reallocation after an agent becomes unavailable." />
   <title>Task Allocation &amp; Finite-State Execution · ARGOS Lab</title>
+  <link rel="stylesheet" href="/src/lesson.css" />
+  <link rel="stylesheet" href="/src/mission-lesson.css" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 </head>
-<body class="mission-page argos-workshop" data-workshop="03">
+<body class="mission-page argos-workshop lesson-workshop" data-workshop="03">
   <a class="skip-link" href="#mission-experiment">Skip to experiment</a>
   <!-- argos:header -->
-  <main>
+  <main class="lesson-page">
     <div class="argos-workshop-topbar">
       <!-- argos:workshop-nav -->
-      <nav class="argos-workshop-sections" aria-label="On this page"><a href="#mission-experiment">Experiment</a><a href="#mission-method">The methods ↗</a></nav>
     </div>
-    <section class="mission-intro"><p class="eyebrow">03 / MISSION EXECUTION &amp; ALLOCATION</p><h1>Assign the work.<br> <span>Then finish the mission.</span></h1><p>Three agents, six observation points. Compare <strong>fixed round-robin</strong>, <strong>nearest-pair greedy</strong> and the <strong>Hungarian algorithm</strong>, with the same finite-state executor.</p><p class="mission-predict"><strong>Predict:</strong> if one agent stops, can the remaining two finish its work?</p></section>
-    <section id="mission-experiment" aria-label="Task allocation experiment">
-      <div class="experiment-heading"><div><p class="eyebrow">CENTRAL ALLOCATION · FINITE-STATE EXECUTION</p><h2>Assigned does not mean completed.</h2></div><span id="mission-status" class="status" aria-live="polite">Paused</span></div>
-      <div class="mission-lab">
-        <div class="mission-visual"><div class="mission-toolbar"><strong id="mission-map-policy">Nearest-pair greedy</strong><div class="segmented" role="group" aria-label="Mission view"><button id="mission-2d" aria-pressed="true">2D</button><button id="mission-3d" aria-pressed="false">3D</button></div></div>
+    <section class="intro mission-intro" aria-labelledby="mission-title">
+      <p class="eyebrow">03 / Coordination · Beginner</p>
+      <h1 id="mission-title">Task allocation.</h1>
+      <p class="intro-question">Who takes the job? When is it finished?</p>
+      <p class="intro-copy">Three agents. Six observation points. Choose who goes where,<br>then watch each agent travel and complete its work.</p>
+      <a class="lesson-start" href="#mission-experiment">Try the experiment <span aria-hidden="true">↘</span></a>
+      <figure class="mission-example" aria-labelledby="mission-example-caption">
+        <div class="mission-example-stage"><span class="mission-example-index">01 / Assigned</span>
+          <svg viewBox="0 0 200 80" fill="none" aria-hidden="true"><circle cx="32" cy="40" r="11" stroke="#446e91"/><path d="M49 40h104m-9-5 9 5-9 5" stroke="#aab8bb" stroke-dasharray="3 5"/><rect x="159" y="29" width="22" height="22" stroke="#446e91"/><path d="M48 61v5h108v-5" stroke="#aab8bb"/></svg>
+          <strong>0.0 <small>s</small></strong><p>A1 receives T1, a point 0.8 m away.</p></div>
+        <div class="mission-example-stage"><span class="mission-example-index">02 / Arrived</span>
+          <svg viewBox="0 0 200 80" fill="none" aria-hidden="true"><path d="M27 40h126" stroke="#aab8bb"/><circle cx="32" cy="40" r="11" stroke="#aab8bb" stroke-dasharray="2 4"/><rect x="159" y="29" width="22" height="22" stroke="#446e91"/><circle cx="170" cy="40" r="5" fill="#446e91"/><circle cx="170" cy="40" r="25" stroke="#9a897a" stroke-dasharray="2 4"/></svg>
+          <strong>0.8 <small>s</small></strong><p>At the point. Service has not started yet.</p></div>
+        <div class="mission-example-stage"><span class="mission-example-index">03 / Completed</span>
+          <svg viewBox="0 0 200 80" fill="none" aria-hidden="true"><path d="M28 40h116" stroke="#aab8bb" stroke-dasharray="2 4"/><rect x="159" y="29" width="22" height="22" stroke="#446e91"/><circle cx="170" cy="40" r="25" stroke="#446e91"/><path d="m164 40 4 4 8-9" stroke="#446e91" stroke-width="1.5"/></svg>
+          <strong>2.8 <small>s</small></strong><p>After 2 s of service, T1 counts as finished.</p></div>
+        <figcaption id="mission-example-caption">Worked example · A1 → T1 · nearest-pair greedy, no failure<br>Service begins in the interval after arrival. Drawings are schematic.</figcaption>
+      </figure>
+      <p class="model-boundary">A browser simulation of planar point motion. The 3D scene shows the same run, with no flight physics, collision avoidance or live execution.</p>
+    </section>
+    <section class="prediction mission-prediction" aria-labelledby="mission-prediction-title">
+      <div><p class="eyebrow">Before you begin</p><h2 id="mission-prediction-title">One agent stops.<br>Who takes its work?</h2></div>
+      <div><p>Compare fixed round-robin, nearest-pair greedy and the Hungarian algorithm. All three use one central coordinator; the assignment rule changes.</p><a href="#mission-cases">Explore the four questions <span aria-hidden="true">↘</span></a></div>
+    </section>
+    <nav class="argos-workshop-sections" aria-label="On this page"><a href="#mission-experiment">Experiment <span aria-hidden="true">↘</span></a><a href="#mission-cases">Four things to try <span aria-hidden="true">↘</span></a><a href="#mission-method">The methods <span aria-hidden="true">↘</span></a></nav>
+    <details id="mission-method-details" class="method-profile mission-profile">
+      <summary><span id="mission-profile-title">Method &amp; assumptions</span><span class="method-summary">Central allocation · finite-state execution · ideal, immediate reports<br>0.1 s steps · 2 s uninterrupted service per task</span></summary>
+      <div class="method-body"><dl class="method-aspects"><div><dt>Allocation algorithms</dt><dd><strong>Fixed · greedy · Hungarian</strong><p>Choose owners in a fixed cycle, match nearest pairs, or minimize the current matching’s total distance.</p></dd></div><div><dt>Execution mechanism</dt><dd><strong>Finite-state machine (FSM)</strong><p>Travel and service are explicit states with completion conditions. An assignment is only a target.</p></dd></div><div><dt>Decision architecture</dt><dd><strong>Centralized for all three</strong><p>One coordinator assigns targets using exact status and position reports. This comparison changes the rule, while keeping authority fixed.</p></dd></div><div><dt>Timing / communication</dt><dd><strong>Discrete · ideal reports</strong><p>0.1 s intervals. Failures are reported immediately, with no packet loss, heartbeat or communication delay.</p></dd></div></dl><p class="method-execution"><strong>Execution:</strong> one browser model of planar point motion. Both views observe it. The 3D quadrotors use a fixed display altitude of 1.5 m. Station rings show completed service; the yard is illustrative. There are no obstacles, collision avoidance, sensor images or flight dynamics in this task-allocation experiment.</p></div>
+    </details>
+    <noscript><p class="no-script-note">JavaScript is needed to run the experiment. You can still read the worked example, exercises and methods below.</p></noscript>
+    <section id="mission-experiment" class="experiment" aria-label="Task allocation experiment">
+      <div class="experiment-heading"><div><p class="eyebrow">01 / Try it</p><h2>Follow the work to completion.</h2></div><span id="mission-status" class="status" aria-live="polite">Paused</span></div>
+      <div class="mission-lab lab-grid">
+        <div class="mission-visual visual-panel"><div class="mission-toolbar visual-toolbar"><strong id="mission-map-policy">Nearest-pair greedy</strong><div class="segmented" role="group" aria-label="Mission view"><button id="mission-2d" aria-pressed="true">2D</button><button id="mission-3d" aria-pressed="false">3D</button></div></div>
           <div id="mission-viewport"></div>
           <p id="mission-view-hint" class="mission-map-hint">Circles: agents · squares: tasks · dashed line: assigned target. Select an agent to inspect its executor.</p>
           <div class="transport"><button id="mission-play" class="primary">▶ Play</button><button id="mission-step">Step once →</button><button id="mission-reset" class="quiet">Reset</button><div class="speed-control"><label for="mission-speed">Playback</label><select id="mission-speed"><option value="2">0.2× · 2 steps/s</option><option value="10" selected>1× · 10 steps/s</option><option value="40">4× · 40 steps/s</option></select></div></div>
         </div>
-        <aside class="mission-control" aria-label="Allocation configuration">
+        <aside class="mission-control configuration" aria-label="Allocation configuration">
+          <div class="panel-heading"><span class="eyebrow">Set the conditions</span><span class="small">New run</span></div>
           <label for="mission-policy">Allocation rule</label><select id="mission-policy"><option value="fixed">Fixed round-robin</option><option value="greedy" selected>Nearest-pair greedy</option><option value="hungarian">Hungarian algorithm</option></select>
           <p id="mission-policy-description">Choose the nearest remaining agent–task pair, then repeat. Reassign released work to available executors.</p>
           <label for="mission-failure">Agent availability</label><select id="mission-failure"><option value="none">All three available</option><option value="a2">A2 unavailable at 5.0 s</option></select>
-          <p>Changes start a paused run. The coordinator receives failures immediately; busy agents keep their current tasks.</p>
+          <p>Changes start a paused run. Failure reports arrive immediately; busy agents keep their tasks. Runs are lost on reload.</p>
           <button id="mission-boundary" class="wide">Advance to 5.0 s</button><button id="mission-finish" class="wide">Run to outcome ↗</button>
           <div class="mission-contract"><strong>Task completion contract</strong><p>Reach the point, then provide <b>2.0 s</b> of uninterrupted service. An interrupted task starts service again.</p><span>1 m/s travel · 0.1 s model step · 60 s budget</span></div>
         </aside>
       </div>
-      <div class="mission-metrics"><div><span>COMPLETED TASKS</span><strong id="mission-completed">0 / 6</strong><small>Arrival alone does not count</small></div><div><span>MODEL TIME</span><strong id="mission-time">0.0 s</strong><small>Step <span id="mission-step-count">0</span> / 600</small></div><div><span>AVAILABLE AGENTS</span><strong id="mission-available">3 / 3</strong><small>Capacity, not mission success</small></div><div><span>TOTAL TRAVEL</span><strong id="mission-distance">0.000 m</strong><small>Includes interrupted journeys</small></div></div>
+      <div class="mission-metrics metrics"><div><span>Completed tasks</span><strong id="mission-completed">0 / 6</strong><small>Arrival alone does not count</small></div><div><span>Simulated time</span><strong id="mission-time">0.0 s</strong><small>Step <span id="mission-step-count">0</span> / 600</small></div><div><span>Available agents</span><strong id="mission-available">3 / 3</strong><small>Capacity, not mission success</small></div><div><span>Total travel</span><strong id="mission-distance">0.000 m</strong><small>Includes interrupted journeys</small></div></div>
       <p id="mission-outcome" class="mission-outcome" aria-live="polite"></p>
-      <div class="mission-workboard"><section class="mission-task-section"><div class="panel-heading"><div><p class="eyebrow">TASK EXECUTION</p><h3>Work remaining</h3></div><span class="mission-small">Reassignments: <b id="mission-reassignments">0</b><br>Lost service: <b id="mission-lost-service">0.0 s</b></span></div><div id="mission-tasks" class="mission-task-grid"></div></section>
-        <section class="mission-agent-section"><div class="panel-heading"><div><p class="eyebrow">EXECUTOR / FSM</p><h3>Agent <span id="mission-agent-name">A1</span></h3></div><select id="mission-agent" aria-label="Inspect mission agent"><option value="0">A1</option><option value="1">A2</option><option value="2">A3</option></select></div><ol id="mission-fsm" class="mission-fsm"><li data-state="idle">Idle</li><li data-state="travelling">Travelling</li><li data-state="servicing">Servicing</li><li data-state="unavailable">Unavailable</li></ol><dl id="mission-agent-details"></dl><p class="mission-small">Normal cycle: idle → travelling → servicing → idle. Unavailable is terminal for this run. Executors receive only their own position, state and assigned task.</p></section>
+      <div class="mission-workboard inspection-grid"><section class="mission-task-section"><div class="panel-heading"><div><p class="eyebrow">Track each task</p><h3>Work remaining</h3></div><span class="mission-small">Reassignments: <b id="mission-reassignments">0</b><br>Lost service: <b id="mission-lost-service">0.0 s</b></span></div><div id="mission-tasks" class="mission-task-grid"></div></section>
+        <section class="mission-agent-section"><div class="panel-heading"><div><p class="eyebrow">Look inside</p><h3>Agent <span id="mission-agent-name">A1</span></h3></div><select id="mission-agent" aria-label="Inspect mission agent"><option value="0">A1</option><option value="1">A2</option><option value="2">A3</option></select></div><ol id="mission-fsm" class="mission-fsm"><li data-state="idle">Idle</li><li data-state="travelling">Travelling</li><li data-state="servicing">Servicing</li><li data-state="unavailable">Unavailable</li></ol><dl id="mission-agent-details"></dl><p class="mission-small">Normal cycle: idle → travelling → servicing → idle. Unavailable is terminal for this run. Executors receive only their own position, state and assigned task.</p></section>
       </div>
-      <div class="mission-table-wrap"><table><caption>Positions, states and targets are executor reports. Travelled distance is an evaluator measurement, excluded from allocation inputs. Distances are in metres.</caption><thead><tr><th>Agent</th><th>State</th><th>Target</th><th>x</th><th>y</th><th>Travelled</th></tr></thead><tbody id="mission-agent-table"></tbody></table></div>
-      <div class="mission-evidence"><section class="mission-dispatch"><div class="panel-heading"><div><p class="eyebrow">COORDINATOR / ASSIGNMENT</p><h3 id="mission-dispatch-title">Dispatch at 0.0 s</h3></div><select id="mission-decision" aria-label="Inspect dispatch"><option value="latest">Latest dispatch</option><option value="first">First dispatch</option></select></div><p id="mission-dispatch-summary"></p><div class="table-scroll" id="mission-costs"></div><p class="mission-small">Costs are straight-line distances at this recorded decision. Selected cells carry ✓. Busy executors and completed tasks do not enter a new matching.</p></section>
-        <section class="mission-events"><p class="eyebrow">EXECUTION HISTORY</p><h3>What happened, and when?</h3><ol id="mission-events"></ol><p class="mission-small">Latest 30 events. Completion reports precede a same-boundary failure; dispatch follows both.</p></section>
+      <p class="experiment-boundary">The coordinator receives exact status and position reports. Each executor receives only its own target and state. Mission time and total travel are evaluator measurements.</p>
+      <div class="mission-table-wrap table-scroll"><table><caption>Positions, states and targets are executor reports. Travelled distance is an evaluator measurement, excluded from allocation inputs. Distances are in metres.</caption><thead><tr><th>Agent</th><th>State</th><th>Target</th><th>x</th><th>y</th><th>Travelled</th></tr></thead><tbody id="mission-agent-table"></tbody></table></div>
+      <div class="mission-evidence inspection-grid"><section class="mission-dispatch"><div class="panel-heading"><div><p class="eyebrow">Inspect the choice</p><h3 id="mission-dispatch-title">Dispatch at 0.0 s</h3></div><select id="mission-decision" aria-label="Inspect dispatch"><option value="latest">Latest dispatch</option><option value="first">First dispatch</option></select></div><p id="mission-dispatch-summary"></p><div class="table-scroll" id="mission-costs"></div><p class="mission-small">Costs are straight-line distances at this saved decision in the current simulation. Selected cells carry ✓. Busy executors and completed tasks do not enter a new matching.</p></section>
+        <section class="mission-events"><p class="eyebrow">Read the sequence</p><h3>What happened, and when?</h3><ol id="mission-events"></ol><p class="mission-small">Latest 30 events. Completion reports precede a same-boundary failure; dispatch follows both.</p></section>
       </div>
     </section>
-    <section class="method-profile mission-profile" aria-labelledby="mission-profile-title"><div class="method-profile-heading"><h2 id="mission-profile-title">Know the methods</h2><a href="#mission-method">Assignment objective &amp; reference ↗</a></div><dl class="method-aspects"><div><dt>Allocation algorithms</dt><dd><strong>Fixed · greedy · Hungarian</strong><p>Choose owners in a fixed cycle, match nearest pairs, or minimize the current matching’s total distance.</p></dd></div><div><dt>Execution mechanism</dt><dd><strong>Finite-state machine (FSM)</strong><p>Travel and service are explicit states with completion conditions. An assignment is only a target.</p></dd></div><div><dt>Decision architecture</dt><dd><strong>Centralized for all three</strong><p>One coordinator assigns targets using exact status and position reports. This comparison changes the rule, while keeping authority fixed.</p></dd></div><div><dt>Timing / communication</dt><dd><strong>Discrete · ideal reports</strong><p>0.1 s intervals. Failures are reported immediately, with no packet loss, heartbeat or communication delay.</p></dd></div></dl><p class="method-execution"><strong>Execution:</strong> one browser model of planar point motion. Both views observe it. The 3D quadrotors use a fixed display altitude of 1.5 m. Station rings show completed service; the yard is illustrative. There are no obstacles, collision avoidance, sensor images or flight dynamics in this task-allocation experiment.</p></section>
-    <section class="mission-cases" aria-labelledby="mission-cases-title"><p class="eyebrow">PREDICT · RUN · INSPECT</p><h2 id="mission-cases-title">Same work. Different assignments.</h2><div class="exercise-grid">
-      <article><span class="exercise-number">01 / OWNERSHIP</span><h3>Keep every task with its owner.</h3><p class="scenario-aspect"><strong>Rule:</strong> fixed round-robin</p><p>A1 owns T1/T4, A2 owns T2/T5, and A3 owns T3/T6. If A2 stops, can another agent take its queue?</p><button data-mission-case="fixed">Load fixed baseline ↗</button><button data-mission-case="fixed-failure" class="secondary-exercise">Fixed + A2 failure ↗</button></article>
-      <article><span class="exercise-number">02 / GREEDY</span><h3>Choose the nearest pair.</h3><p class="scenario-aspect"><strong>Rule:</strong> adaptive nearest-pair greedy</p><p>Inspect the first assignment matrix. Taking the cheapest pair can leave another agent with a much longer trip.</p><button data-mission-case="greedy">Load greedy baseline ↗</button><button data-mission-case="greedy-failure" class="secondary-exercise">Greedy + A2 failure ↗</button></article>
-      <article><span class="exercise-number">03 / MATCHING</span><h3>Minimize this dispatch’s cost.</h3><p class="scenario-aspect"><strong>Rule:</strong> Hungarian algorithm</p><p>Compare selected pairs and their summed distance. An optimal current matching does not solve every future route or failure.</p><button data-mission-case="hungarian">Load Hungarian baseline ↗</button><button data-mission-case="hungarian-failure" class="secondary-exercise">Hungarian + A2 failure ↗</button></article>
-    </div><details id="mission-comparisons" class="comparison-details"><summary>Compare the six measured reference runs</summary><p>Same starts, tasks, travel speed, service duration and budget. Each run stops at its first outcome. A blocked run’s short duration is not a successful completion time.</p><div class="table-scroll"><table><caption>Time is simulated. Travel includes unsuccessful work. Reassignments count an already assigned task moving to a different owner.</caption><thead><tr><th>Policy</th><th>A2 at 5 s</th><th>Outcome</th><th>Completed</th><th>Time</th><th>Travel</th><th>Reassigned</th><th>Lost service</th></tr></thead><tbody id="mission-comparison-table"></tbody></table></div></details></section>
-    <section id="mission-method" class="model-section"><div><p class="eyebrow">LINEAR ASSIGNMENT PROBLEM</p><h2>A matching is a decision,<br>not a finished mission.</h2><p>The Hungarian algorithm minimizes the sum of current agent-to-task distances. The finite-state executor then has to travel and complete service.</p><p>When a job is interrupted, completed work stays completed, but its unfinished service must restart. Reallocation requires a free executor.</p></div><div class="model-content"><div class="equation mission-equation">c<sub>ij</sub> = ‖p<sub>i</sub> − q<sub>j</sub>‖<br>minimize ∑ c<sub>ij</sub> x<sub>ij</sub><br>at most one task per idle agent<br>at most one agent per pending task<br>number of pairs = min(idle agents, pending tasks)</div><dl class="equation-key"><div><dt>p<sub>i</sub>, q<sub>j</sub></dt><dd>Agent position and task position, in metres.</dd></div><div><dt>x<sub>ij</sub> ∈ {0, 1}</dt><dd>Whether that agent–task pair is selected.</dd></div><div><dt>Current distance objective</dt><dd>Service time is identical for all tasks. No future jobs or failure schedule enter the matrix.</dd></div><div><dt>Global measurements</dt><dd>Mission duration, total travel and completed fraction are evaluation results, not the optimized dispatch cost.</dd></div></dl><div class="model-facts"><div><h3>Unavailable is a modeled event.</h3><p>A2 stops at 5.0 s and its active task returns to pending. The coordinator learns this immediately. No real failure detector is implemented.</p></div><div><h3>What counts as finished?</h3><p>All six tasks must complete 2 s of service. If no assignment or execution can proceed while work remains, the result is blocked. Otherwise the budget is 60 s.</p></div></div><p class="reference">Primary assignment source: H. W. Kuhn (1955), <a href="https://doi.org/10.1002/nav.3800020109" target="_blank" rel="noreferrer">The Hungarian method for the assignment problem ↗</a>. This workshop uses a rectangular minimum-cost variant, recomputed for idle agents and pending tasks. It does not claim an optimal multi-stop mission schedule.</p></div></section>
+    <section id="mission-cases" class="mission-cases field-notes" aria-labelledby="mission-cases-title">
+      <div class="section-heading"><div><p class="eyebrow">02 / Follow a question</p><h2 id="mission-cases-title">Same work.<br>Different assignments.</h2></div><p>Change the rule. See what gets assigned, and what gets finished.</p></div>
+      <div class="exercise-grid">
+        <article>
+<svg class="exercise-diagram" viewBox="0 0 420 160" fill="none" role="img" aria-label="Fixed task ownership: A1 owns T1 and T4, A2 owns T2 and T5, and A3 owns T3 and T6. Those ownership groups do not change when an agent becomes unavailable.">
+  <g stroke="#aab8bb" stroke-width="1.2">
+    <path d="M102 31h140 M102 79h140 M102 127h140"/>
+    <path d="M268 31h64 M268 79h64 M268 127h64" stroke-dasharray="3 5"/>
+  </g>
+  <g fill="#f3f4f1" stroke="#446e91" stroke-width="1.4">
+    <circle cx="87" cy="31" r="15"/><circle cx="87" cy="79" r="15"/><circle cx="87" cy="127" r="15"/>
+    <rect x="242" y="18" width="26" height="26"/><rect x="332" y="18" width="26" height="26"/>
+    <rect x="242" y="66" width="26" height="26"/><rect x="332" y="66" width="26" height="26"/>
+    <rect x="242" y="114" width="26" height="26"/><rect x="332" y="114" width="26" height="26"/>
+  </g>
+  <g fill="#273438" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">
+    <text x="87" y="35">A1</text><text x="87" y="83">A2</text><text x="87" y="131">A3</text>
+    <text x="255" y="35">T1</text><text x="345" y="35">T4</text>
+    <text x="255" y="83">T2</text><text x="345" y="83">T5</text>
+    <text x="255" y="131">T3</text><text x="345" y="131">T6</text>
+  </g>
+  <g fill="#617077" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">
+    <text x="171" y="26">owns</text><text x="171" y="74">owns</text><text x="171" y="122">owns</text>
+  </g>
+</svg>
+          <span class="exercise-number">01 / Fixed ownership</span><h3>Keep the same owners.</h3><p>Each agent has its own task queue. Make A2 unavailable: can the other two finish work that still belongs to A2?</p><button data-mission-case="fixed">Load fixed baseline <span aria-hidden="true">↗</span></button><button data-mission-case="fixed-failure" class="secondary-exercise">Fixed + A2 failure <span aria-hidden="true">↗</span></button>
+        </article>
+        <article>
+<svg class="exercise-diagram" viewBox="0 0 420 160" fill="none" role="img" aria-label="Greedy first dispatch: A1 takes T1 at 0.8 metres, leaving A2 to take T2 at 4 metres. A3 takes T3 at 2 metres. Total distance of these three pairs: 6.8 metres.">
+  <g stroke="#446e91" stroke-width="1.5">
+    <path d="M85 38h243m-8-4 8 4-8 4"/>
+    <path d="M85 99h243m-8-4 8 4-8 4"/>
+  </g>
+  <g fill="#f3f4f1" stroke="#273438" stroke-width="1.3">
+    <circle cx="70" cy="38" r="15"/><circle cx="70" cy="99" r="15"/>
+    <rect x="328" y="25" width="26" height="26"/><rect x="328" y="86" width="26" height="26"/>
+  </g>
+  <g fill="#273438" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">
+    <text x="70" y="42">A1</text><text x="70" y="103">A2</text>
+    <text x="341" y="42">T1</text><text x="341" y="103">T2</text>
+    <text x="205" y="29">0.8 m</text><text x="205" y="90">4.0 m</text>
+  </g>
+  <text x="210" y="147" fill="#617077" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">+ A3 → T3: 2 m = 6.8 m total</text>
+</svg>
+          <span class="exercise-number">02 / Nearest-pair greedy</span><h3>Take the nearest pair.</h3><p>A1 takes the closest task first. What does that leave for A2? Inspect the first dispatch and add the three selected distances.</p><button data-mission-case="greedy">Load greedy baseline <span aria-hidden="true">↗</span></button>
+        </article>
+        <article>
+<svg class="exercise-diagram" viewBox="0 0 420 160" fill="none" role="img" aria-label="Hungarian first dispatch: A1 takes T2 at 2 metres, while A2 takes T1 at 1.2 metres. A3 still takes T3 at 2 metres. Total distance of these three pairs: 5.2 metres.">
+  <g stroke="#446e91" stroke-width="1.5">
+    <path d="m85 38 243 61m-7-6 7 6-9 2"/>
+    <path d="m85 99 243-61m-9-2 9 2-7 6"/>
+  </g>
+  <g fill="#f3f4f1" stroke="#273438" stroke-width="1.3">
+    <circle cx="70" cy="38" r="15"/><circle cx="70" cy="99" r="15"/>
+    <rect x="328" y="25" width="26" height="26"/><rect x="328" y="86" width="26" height="26"/>
+  </g>
+  <g fill="#273438" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">
+    <text x="70" y="42">A1</text><text x="70" y="103">A2</text>
+    <text x="341" y="42">T1</text><text x="341" y="103">T2</text>
+    <text x="132" y="41">2.0 m</text><text x="132" y="116">1.2 m</text>
+  </g>
+  <text x="210" y="147" fill="#617077" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">+ A3 → T3: 2 m = 5.2 m total</text>
+</svg>
+          <span class="exercise-number">03 / Hungarian matching</span><h3>Consider the pairs together.</h3><p>A1 travels farther so A2 can travel less. The first matching costs 5.2 m. Does optimizing one dispatch guarantee the best whole mission?</p><button data-mission-case="hungarian">Load Hungarian baseline <span aria-hidden="true">↗</span></button>
+        </article>
+        <article>
+<svg class="exercise-diagram" viewBox="0 0 420 160" fill="none" role="img" aria-label="Greedy failure example: A2 begins servicing T2 at 4 seconds and becomes unavailable at 5 seconds. The task returns to pending, losing 1 second of service. A3 receives it at 8.3 seconds and still has to travel and provide the full 2 seconds of service.">
+  <path d="M62 70h96" stroke="#446e91" stroke-width="2"/>
+  <path d="M170 70h174" stroke="#aab8bb" stroke-width="1.3" stroke-dasharray="3 5"/>
+  <path d="M355 70h24m-8-4 8 4-8 4" stroke="#446e91" stroke-width="1.5"/>
+  <circle cx="62" cy="70" r="5" fill="#f3f4f1" stroke="#446e91" stroke-width="1.4"/>
+  <path d="m156 64 12 12m0-12-12 12" stroke="#9a897a" stroke-width="2"/>
+  <circle cx="350" cy="70" r="5" fill="#f3f4f1" stroke="#446e91" stroke-width="1.4"/>
+  <g fill="#273438" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">
+    <text x="87" y="39">A2 serving</text><text x="252" y="39">Pending</text><text x="350" y="39">A3 assigned</text>
+    <text x="62" y="94">4.0 s</text><text x="162" y="94">5.0 s</text><text x="350" y="94">8.3 s</text>
+  </g>
+  <g fill="#617077" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">
+    <text x="125" y="142">1 s of service lost</text><text x="320" y="142">2 s still needed</text>
+  </g>
+</svg>
+          <span class="exercise-number">04 / Interrupted service</span><h3>Finish the work left behind.</h3><p>With greedy allocation, A2 loses 1 s of service when it stops. Advance to 5 s, then watch when an agent becomes free to take the released task.</p><button data-mission-case="greedy-failure">Greedy + A2 failure <span aria-hidden="true">↗</span></button><button data-mission-case="hungarian-failure" class="secondary-exercise">Hungarian + A2 failure <span aria-hidden="true">↗</span></button>
+        </article>
+      </div><p class="exercise-notice">Each case starts paused with the stated rule and failure preset. Pairings and event order are schematic, not recorded trajectories.</p>
+      <details id="mission-comparisons" class="comparison-details"><summary>Compare the six measured reference runs <span>Completion · blocked work · recovery</span></summary><p>Same starts, tasks, travel speed, service duration and budget. Each run stops at its first outcome. A blocked run’s short duration is not a successful completion time.</p><div class="table-scroll"><table><caption>Time is simulated. Travel includes unsuccessful work. Reassignments count an already assigned task moving to a different owner.</caption><thead><tr><th>Policy</th><th>A2 at 5 s</th><th>Outcome</th><th>Completed</th><th>Time</th><th>Travel</th><th>Reassigned</th><th>Lost service</th></tr></thead><tbody id="mission-comparison-table"></tbody></table></div></details>
+    </section>
+    <section id="mission-method" class="model-section" aria-labelledby="mission-model-title">
+      <div class="model-intro"><p class="eyebrow">03 / Go deeper</p><h2 id="mission-model-title">A good pairing.<br>Then the work begins.</h2><p>The Hungarian algorithm minimizes the sum of distances in the current dispatch. The finite-state executor still has to travel and finish service.</p></div>
+      <div class="model-preview"><span class="eyebrow">First dispatch · three selected pairs</span><dl class="mission-matching"><div><dt>Greedy</dt><dd>6.8 <small>m</small></dd></div><div><dt>Hungarian</dt><dd>5.2 <small>m</small></dd></div></dl><p>Same starts and six available tasks. Different pairings for A1 and A2; A3 takes T3 in both.</p><p>This compares current matching costs, not whole-mission travel or completion times.</p></div>
+      <details id="mission-model-details" class="model-details"><summary>Read the objective, assumptions &amp; source <span aria-hidden="true">+</span></summary>
+<div class="model-content"><div id="mission-equation" class="equation mission-equation">c<sub>ij</sub> = ‖p<sub>i</sub> − q<sub>j</sub>‖<br>minimize ∑ c<sub>ij</sub> x<sub>ij</sub><span class="matching-constraints">at most one task per idle agent<br>at most one agent per pending task<br>number of pairs = min(idle agents, pending tasks)</span></div><dl class="equation-key"><div><dt>p<sub>i</sub>, q<sub>j</sub></dt><dd>Agent position and task position, in metres.</dd></div><div><dt>x<sub>ij</sub> ∈ {0, 1}</dt><dd>Whether that agent–task pair is selected.</dd></div><div><dt>Current distance objective</dt><dd>Service time is identical for all tasks. No future jobs or failure schedule enter the matrix.</dd></div><div><dt>Global measurements</dt><dd>Mission duration, total travel and completed fraction are evaluation results, not the optimized dispatch cost.</dd></div></dl><div class="model-facts"><div><h3>Unavailable is a modeled event.</h3><p>A2 stops at 5.0 s and its active task returns to pending. The coordinator learns this immediately. No real failure detector is implemented.</p></div><div><h3>What counts as finished?</h3><p>All six tasks must complete 2 s of service. If no assignment or execution can proceed while work remains, the result is blocked. Otherwise the budget is 60 s.</p></div></div><p class="reference">Primary assignment source: H. W. Kuhn (1955), <a href="https://doi.org/10.1002/nav.3800020109" target="_blank" rel="noreferrer">The Hungarian method for the assignment problem ↗</a>. This workshop uses a rectangular minimum-cost variant, recomputed for idle agents and pending tasks. It does not claim an optimal multi-stop mission schedule.</p></div>
+      </details>
+      <p class="model-limits">An optimal current matching does not guarantee an optimal whole-mission schedule. Completed work stays completed; interrupted service restarts. Immediate failure detection does not imply immediate reassignment.</p>
+    </section>
+    <section class="lesson-next" aria-label="Continue learning"><div><p class="eyebrow">Keep the thread</p><h2>Who gets<br>to decide?</h2><p>Explore central, hierarchical and peer decisions in a separate experiment with message delivery and local report caches.</p></div><a href="/architecture/">Explore decision architectures <span aria-hidden="true">↗</span></a></section>
   </main>
   <!-- argos:footer -->
   <script type="module" src="/src/mission-main.js"></script>

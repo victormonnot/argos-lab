@@ -99,12 +99,15 @@ experiment or rewinds a recording.
 `src/site/shell.css` styles the common navigation. `src/site/site.css` styles the
 home and common editorial elements; `src/site/catalog.css` adds the catalog's
 layout. Pearl surfaces, graphite text and steel-blue accents frame discovery.
-Workshops 01 and 02 share `src/lesson.css`: a worked example, experiment,
+Workshops 01–03 share `src/lesson.css`: a worked example, experiment,
 illustrated questions and optional technical explanations. Their renderers and
 workshop-specific styles remain separate. The stylesheet is linked from HTML
 so reading does not depend on the experiment's JavaScript. Native disclosures
 work without JavaScript; with it, bookmarks open the containing disclosure
 without resetting the active run. Other workshops retain their existing layouts.
+Workshop 03 uses `src/mission-lesson.css`; the older `src/mission.css` remains
+available to workshops that already depend on it. Its shared renderer scopes
+the light presentation to workshop 03, preserving the architecture page's view.
 Fonts are served locally with their [license notices](../public/fonts/README.md).
 The home page has a static illustration and direct thematic links when its
 canvas cannot run. It has no automatic animation or background simulation.
