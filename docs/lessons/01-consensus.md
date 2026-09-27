@@ -23,9 +23,10 @@ sections under `/consensus/` when JavaScript is available.
 | Execution and fidelity | One browser simulation of scalar dynamics | One program simulates six agents making local decisions; spatial views display the same abstract state. |
 
 Show the algorithm name in the page title and opening heading. Keep a concise
-method profile visible before the experiment, define topology by its selector,
-and label the aspect changed by each guided experiment. The primary reference
-and implementation boundaries are listed at the end of this brief.
+method summary visible before the experiment, with definitions in the native
+**Method & assumptions** disclosure. Define topology by its selector and label
+the aspect changed by each guided experiment. The primary reference and
+implementation boundaries are listed at the end of this brief.
 
 ## Learning objective
 
@@ -36,6 +37,27 @@ a number is correct about the outside world.
 
 Start with a visible example before introducing the equation. These are abstract
 agents, not simulated aircraft executing a flight mission.
+
+## Reading structure
+
+The light workshop page opens with the six default values and the result of one
+complete-graph step: `[3, 4, 5, 7, 8, 9]`. A prediction leads into the experiment.
+Controls, evaluator metrics, the disagreement curve and agent state table remain
+directly available. Four spaced exercises follow: connectivity, partition,
+recovery and shared bias. Optional reference runs compute without changing the
+learner's current run.
+
+The technical section introduces one agent's update before a native disclosure
+containing the full equation, symbol definitions, assumptions and primary source.
+Fixed connected-graph convergence and the distinction between agreement and
+correctness remain visible without expanding it. Opening explanations changes
+only the reading layout, never the experiment state. Fragment links into closed
+disclosures open them when JavaScript is available.
+
+The worked example, exercises and technical explanations are readable without
+JavaScript; controls and measured runs require JavaScript. The 2D and 3D network
+and the history plot use the same light palette, with a fixed initial-value
+color scale. Small-screen layouts keep graph labels and plot axes readable.
 
 ## Workshop contents
 

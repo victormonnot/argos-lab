@@ -150,13 +150,19 @@ The algorithm is **distributed average consensus**, implemented as linear
 consensus with a constant edge gain. Its decision architecture is
 **decentralized and leaderless**; updates are **synchronous and discrete-time**
 over an **undirected, unweighted graph**. The complete graph, chain and two groups
-are communication topologies of the same algorithm. The page's **Know the method**
-profile explains these terms beside the experiment.
+are communication topologies of the same algorithm. The page's **Method & assumptions**
+summary introduces these choices; expand it for their definitions.
 
 **How do several agents reach agreement?** Six agents begin with
 `[0, 2, 4, 8, 10, 12]`. Each updates its number using only its neighbors' values.
 The initial mean is `6`, shown as an evaluator measurement rather than an agent
 input.
+
+The lesson opens with a worked example, followed by the interactive experiment
+and four guided questions. The equation, assumptions and primary reference are
+available under **Read the rule, assumptions & source**. Opening an explanation
+does not reset or advance the experiment. The example and explanatory disclosures
+remain readable without JavaScript; the experiment itself requires it.
 
 1. Predict the outcome, then press **Step once**. On the complete graph, the
    values become `[3, 4, 5, 7, 8, 9]`.

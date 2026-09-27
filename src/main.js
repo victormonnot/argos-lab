@@ -1,9 +1,9 @@
-import './style.css';
 import { ALPHA, BUDGET, DEFAULT_VALUES, PRESETS, THRESHOLD, VALUE_LIMIT, createRun, stepRun, setLink, startReplay, resetRun, mean, disagreement, connectedComponents } from './model.js';
 import { compareScenarios } from './comparisons.js';
 import { createGraphView } from './graph-view.js';
 
 const $ = (selector) => document.querySelector(selector);
+const scrollBehavior = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
 const names = { complete: 'Complete graph', chain: 'Chain', groups: 'Two groups' };
 let run = createRun();
 let playing = false;
@@ -121,13 +121,13 @@ document.querySelectorAll('[data-scenario]').forEach((button) => button.addEvent
   $('#exercise-notice').textContent = scenario === 'recovery'
     ? 'Recovery loaded: A3–A4 removed at step 0. Advance to step 100, restore link 3–4, then continue. Reset restores the original connected chain.'
     : `${names[scenario]} loaded with the six default values. Predict, then press Play.`;
-  $('#experiment').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#experiment').scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
 }));
 $('#shift-values').addEventListener('click', () => {
   try {
     configure({ values: run.initial.values.map((value) => value + 100), preset: 'complete' });
     $('#exercise-notice').textContent = 'Added 100 to all configured starting values and loaded a complete graph. Compare the disagreement curve with the unshifted complete graph.';
-    $('#experiment').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $('#experiment').scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
   } catch (error) { $('#input-error').textContent = error.message; }
 });
 const predictions = {
@@ -141,7 +141,9 @@ document.querySelectorAll('[data-prediction]').forEach((button) => button.addEve
 }));
 
 function renderChart() {
-  const width = 640, height = 192, left = 44, right = 14, top = 18, bottom = 28;
+  // Match CSS pixels so axis labels remain readable on narrow screens.
+  const width = Math.max(240, Math.round($('#history-chart').clientWidth));
+  const height = 220, left = 48, right = 14, top = 26, bottom = 28;
   const plotWidth = width - left - right, plotHeight = height - top - bottom;
   const initialRange = run.history[0].disagreement;
   const ceiling = Math.max(THRESHOLD * 2, initialRange);
@@ -150,12 +152,12 @@ function renderChart() {
   const points = run.history.map((point) => `${x(point.step).toFixed(2)},${y(point.disagreement).toFixed(2)}`).join(' ');
   const guides = [0, 0.5, 1].map((fraction) => {
     const value = fraction * ceiling;
-    return `<line x1="${left}" y1="${y(value)}" x2="${width - right}" y2="${y(value)}" stroke="#e5eae1"/><text x="${left - 9}" y="${y(value) + 3}" text-anchor="end">${value >= 10000 ? value.toExponential(0) : Number(value.toPrecision(3))}</text>`;
+    return `<line x1="${left}" y1="${y(value)}" x2="${width - right}" y2="${y(value)}" stroke="#dce2df"/><text x="${left - 9}" y="${y(value) + 4}" text-anchor="end">${value >= 10000 ? value.toExponential(0) : Number(value.toPrecision(3))}</text>`;
   }).join('');
   const endStep = Math.max(10, run.step);
   // The full numerical history remains in run.history. This is a linear-range
   // view; agreement is decided on unrounded values, never on graph pixels.
-  $('#history-chart').innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Disagreement over ${run.step} steps, from ${format(initialRange)} to ${format(disagreement(run.values))}. Linear scale."><g font-family="ui-monospace, monospace" font-size="9" fill="#7b8b7e">${guides}<text x="${left}" y="${height - 8}">0</text><text x="${width - right}" y="${height - 8}" text-anchor="end">${endStep} steps</text><text x="${left}" y="10">scalar-value units</text></g><polygon points="${left},${y(0)} ${points} ${x(run.step)},${y(0)}" fill="#eaf3e6"/><line x1="${left}" y1="${y(THRESHOLD)}" x2="${width - right}" y2="${y(THRESHOLD)}" stroke="#c5a568" stroke-dasharray="4 4"/><polyline points="${points}" fill="none" stroke="#37856c" stroke-width="2.5" stroke-linejoin="round"/><circle cx="${x(run.step)}" cy="${y(disagreement(run.values))}" r="3.5" fill="#37856c"/></svg>`;
+  $('#history-chart').innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Disagreement over ${run.step} steps, from ${format(initialRange)} to ${format(disagreement(run.values))}. Linear scale."><g font-family="'IBM Plex Mono', monospace" font-size="11" fill="#617077">${guides}<text x="${left}" y="${height - 8}">0</text><text x="${width - right}" y="${height - 8}" text-anchor="end">${endStep} steps</text><text x="${left}" y="12">scalar-value units</text></g><polygon points="${left},${y(0)} ${points} ${x(run.step)},${y(0)}" fill="#e6edf1"/><line x1="${left}" y1="${y(THRESHOLD)}" x2="${width - right}" y2="${y(THRESHOLD)}" stroke="#9e7960" stroke-dasharray="4 4"/><polyline points="${points}" fill="none" stroke="#446e91" stroke-width="2" stroke-linejoin="round"/><circle cx="${x(run.step)}" cy="${y(disagreement(run.values))}" r="3.5" fill="#446e91"/></svg>`;
 }
 
 function render() {
@@ -235,5 +237,43 @@ $('.comparison-details').addEventListener('toggle', (event) => {
   comparisonsRendered = true;
 });
 
+// Fragment links should reach optional explanations as well as visible sections.
+// Opening a disclosure must never configure, advance or replay the experiment.
+function revealFragment() {
+  let id;
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+  const target = document.getElementById(id);
+  if (!target) return;
+  let ancestor = target;
+  let opened = false;
+  while (ancestor) {
+    if (ancestor instanceof HTMLDetailsElement && !ancestor.open) {
+      ancestor.open = true;
+      opened = true;
+    }
+    ancestor = ancestor.parentElement;
+  }
+  if (opened) requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+}
+
 render();
-if (import.meta.hot) import.meta.hot.dispose(() => { stop(); graph.dispose(); });
+let chartWidth = Math.round($('#history-chart').clientWidth);
+let chartFrame = null;
+const chartResize = new ResizeObserver(() => {
+  const nextWidth = Math.round($('#history-chart').clientWidth);
+  if (nextWidth !== chartWidth) {
+    chartWidth = nextWidth;
+    cancelAnimationFrame(chartFrame);
+    chartFrame = requestAnimationFrame(renderChart);
+  }
+});
+chartResize.observe($('#history-chart'));
+revealFragment();
+window.addEventListener('hashchange', revealFragment);
+if (import.meta.hot) import.meta.hot.dispose(() => {
+  stop();
+  graph.dispose();
+  chartResize.disconnect();
+  cancelAnimationFrame(chartFrame);
+  window.removeEventListener('hashchange', revealFragment);
+});

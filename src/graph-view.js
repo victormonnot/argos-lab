@@ -1,8 +1,8 @@
 import './graph-view.css';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const LOW_COLOR = [99, 212, 192];
-const HIGH_COLOR = [243, 172, 120];
+const LOW_COLOR = [68, 110, 145];
+const HIGH_COLOR = [158, 121, 96];
 
 function svgElement(name, attributes = {}) {
   const element = document.createElementNS(SVG_NS, name);
@@ -52,6 +52,8 @@ export function createGraphView(container, { onSelectAgent = () => {} } = {}) {
   threeLayer.hidden = true;
   const labels = document.createElement('div');
   labels.className = 'graph-three-labels';
+  const metadata = document.createElement('div');
+  metadata.className = 'graph-metadata';
   const corner = document.createElement('span');
   corner.className = 'graph-corner';
   corner.textContent = 'ABSTRACT NETWORK';
@@ -59,20 +61,24 @@ export function createGraphView(container, { onSelectAgent = () => {} } = {}) {
   hint.className = 'graph-hint';
   const scale = document.createElement('div');
   scale.className = 'graph-scale';
+  const scaleLabel = document.createElement('span');
+  scaleLabel.className = 'graph-scale-label';
+  scaleLabel.textContent = 'Initial scale';
   const minimum = document.createElement('span');
   const gradient = document.createElement('span');
   gradient.className = 'graph-scale-gradient';
   gradient.setAttribute('aria-hidden', 'true');
   const maximum = document.createElement('span');
-  scale.append(minimum, gradient, maximum);
-  stage.append(svg, threeLayer, corner, scale);
+  scale.append(scaleLabel, minimum, gradient, maximum);
+  metadata.append(corner, scale);
+  stage.append(svg, threeLayer, metadata);
   root.append(stage, hint);
   container.append(root);
 
   const svgNodes = Array.from({ length: 6 }, (_, index) => {
     const group = svgElement('g', { class: 'graph-node', role: 'button', tabindex: '0', 'data-agent': index });
-    const halo = svgElement('circle', { r: 34, class: 'graph-node-halo' });
-    const disc = svgElement('circle', { r: 28, class: 'graph-node-disc' });
+    const halo = svgElement('circle', { r: 39, class: 'graph-node-halo' });
+    const disc = svgElement('circle', { r: 32, class: 'graph-node-disc' });
     const name = svgElement('text', { y: -8, class: 'graph-node-name', 'text-anchor': 'middle' });
     name.textContent = `A${index + 1}`;
     const value = svgElement('text', { y: 11, class: 'graph-node-value', 'text-anchor': 'middle' });
@@ -90,12 +96,15 @@ export function createGraphView(container, { onSelectAgent = () => {} } = {}) {
 
   function renderSvg() {
     if (!snapshot) return;
-    const width = Math.max(330, stage.clientWidth);
+    // Match CSS pixels, so narrow screens retain readable agent labels.
+    const width = Math.max(1, stage.clientWidth);
     const height = stage.clientHeight || 350;
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    const radiusX = Math.min(205, width * 0.33);
-    const radiusY = Math.min(116, height * 0.32);
-    const centerY = height * 0.52;
+    const radiusX = Math.min(205, Math.max(0, (width / 2 - 43) / Math.cos(Math.PI / 6)));
+    const contentTop = metadata.offsetHeight + 54;
+    const contentBottom = height - 43;
+    const centerY = (contentTop + contentBottom) / 2;
+    const radiusY = Math.min(112, Math.max(0, (contentBottom - contentTop) / 2 - 2));
     const positions = snapshot.values.map((_, index) => {
       const angle = (-150 + index * 60) * Math.PI / 180;
       return [width / 2 + radiusX * Math.cos(angle), centerY + radiusY * Math.sin(angle)];
@@ -122,8 +131,8 @@ export function createGraphView(container, { onSelectAgent = () => {} } = {}) {
     if (!three || mode !== '3d' || disposed || unavailable) return;
     const { renderer, scene, camera, meshes } = three;
     renderer.render(scene, camera);
-    const width = stage.clientWidth;
-    const height = stage.clientHeight;
+    const width = threeLayer.clientWidth;
+    const height = threeLayer.clientHeight;
     meshes.forEach(({ sphere, label }) => {
       const point = sphere.position.clone().project(camera);
       label.style.left = `${(point.x * 0.5 + 0.5) * width}px`;
@@ -180,7 +189,7 @@ export function createGraphView(container, { onSelectAgent = () => {} } = {}) {
       return;
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setClearColor(0x101f22, 0);
+    renderer.setClearColor(0xfbfcfa, 0);
     renderer.domElement.setAttribute('aria-label', '3D graph. Drag to orbit; scroll or pinch to zoom. Agent values are also available in the state table.');
     renderer.domElement.addEventListener('webglcontextlost', (event) => {
       event.preventDefault();
@@ -200,34 +209,34 @@ export function createGraphView(container, { onSelectAgent = () => {} } = {}) {
     controls.update();
     // No animation loop: camera events and new snapshots request a render.
     controls.addEventListener('change', renderThree);
-    scene.add(new THREE.AmbientLight(0xffffff, 2));
-    const key = new THREE.DirectionalLight(0xffffff, 2.2);
+    scene.add(new THREE.AmbientLight(0xffffff, 1.7));
+    const key = new THREE.DirectionalLight(0xffffff, 1.9);
     key.position.set(3, 7, 4);
     scene.add(key);
-    const grid = new THREE.GridHelper(9, 18, 0x35504f, 0x243b3c);
+    const grid = new THREE.GridHelper(9, 18, 0xacbbbf, 0xd3dcdd);
     grid.material.transparent = true;
     grid.material.opacity = 0.55;
     scene.add(grid);
     const linkGeometry = new THREE.BufferGeometry();
     linkGeometry.setAttribute('position', new THREE.Float32BufferAttribute(90, 3));
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x9ebcb5, transparent: true, opacity: 0.62 });
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x647f90, transparent: true, opacity: 0.7 });
     const network = new THREE.LineSegments(linkGeometry, lineMaterial);
     scene.add(network);
     const groundGeometry = new THREE.BufferGeometry();
     groundGeometry.setAttribute('position', new THREE.Float32BufferAttribute(90, 3));
-    const groundMaterial = new THREE.LineBasicMaterial({ color: 0x6a9691, transparent: true, opacity: 0.3 });
+    const groundMaterial = new THREE.LineBasicMaterial({ color: 0x9aabac, transparent: true, opacity: 0.38 });
     const ground = new THREE.LineSegments(groundGeometry, groundMaterial);
     scene.add(ground);
     const sphereGeometry = new THREE.SphereGeometry(0.17, 24, 16);
     const ringGeometry = new THREE.TorusGeometry(0.26, 0.012, 6, 40);
     const meshes = Array.from({ length: 6 }, (_, index) => {
-      const sphere = new THREE.Mesh(sphereGeometry, new THREE.MeshStandardMaterial({ roughness: 0.42, metalness: 0.08 }));
+      const sphere = new THREE.Mesh(sphereGeometry, new THREE.MeshStandardMaterial({ roughness: 0.72, metalness: 0 }));
       const angle = (-150 + index * 60) * Math.PI / 180;
       sphere.position.set(Math.cos(angle) * 2.3, 0.3, Math.sin(angle) * 2.3);
-      const stem = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x90b4ad, transparent: true, opacity: 0.4 }));
-      const ring = new THREE.Mesh(ringGeometry, new THREE.MeshBasicMaterial({ color: 0xedf3ef }));
+      const stem = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x7b9099, transparent: true, opacity: 0.7 }));
+      const ring = new THREE.Mesh(ringGeometry, new THREE.MeshBasicMaterial({ color: 0x314c62 }));
       ring.rotation.x = -Math.PI / 2;
-      const footprint = new THREE.Mesh(new THREE.CircleGeometry(0.07, 16), new THREE.MeshBasicMaterial({ color: 0x789a93 }));
+      const footprint = new THREE.Mesh(new THREE.CircleGeometry(0.07, 16), new THREE.MeshBasicMaterial({ color: 0x657e8d }));
       footprint.rotation.x = -Math.PI / 2;
       footprint.position.set(sphere.position.x, 0.013, sphere.position.z);
       scene.add(sphere, stem, ring, footprint);
@@ -276,16 +285,22 @@ export function createGraphView(container, { onSelectAgent = () => {} } = {}) {
 
   function resizeThree() {
     if (!three || unavailable) return;
-    const width = Math.max(1, stage.clientWidth);
-    const height = Math.max(1, stage.clientHeight);
+    // Keep the scene and selectable labels clear of the value legend.
+    const inset = metadata.offsetHeight + 36;
+    threeLayer.style.top = `${inset}px`;
+    threeLayer.style.height = `calc(100% - ${inset}px)`;
+    const width = Math.max(1, threeLayer.clientWidth);
+    const height = Math.max(1, threeLayer.clientHeight);
     three.renderer.setSize(width, height, false);
     three.camera.aspect = width / height;
+    // Widen the vertical field on phones without resetting a learner's orbit.
+    three.camera.fov = 2 * Math.atan(Math.tan(43 * Math.PI / 360) / Math.min(1, Math.max(0.55, width / height))) * 180 / Math.PI;
     three.camera.updateProjectionMatrix();
     renderThree();
   }
 
   function updateCaption() {
-    corner.textContent = mode === '3d' ? 'ABSTRACT 3D' : 'ABSTRACT NETWORK';
+    corner.textContent = mode === '3d' ? 'ABSTRACT 3D' : 'NETWORK VIEW';
     hint.textContent = mode === '2d'
       ? 'Select an agent to inspect its neighbors. Positions are a layout; color encodes value.'
       : 'Drag to orbit · scroll or pinch to zoom. Height and color encode value; this is not physical motion.';
@@ -307,9 +322,10 @@ export function createGraphView(container, { onSelectAgent = () => {} } = {}) {
   return {
     update(nextSnapshot) {
       snapshot = nextSnapshot;
+      updateCaption();
       renderSvg();
       updateThree();
-      updateCaption();
+      if (three && mode === '3d' && threeLayer.style.top !== `${metadata.offsetHeight + 36}px`) resizeThree();
     },
     setMode(nextMode) {
       if (nextMode !== '2d' && nextMode !== '3d') throw new Error('Unknown graph view mode');
@@ -321,8 +337,8 @@ export function createGraphView(container, { onSelectAgent = () => {} } = {}) {
       threeLayer.hidden = mode !== '3d';
       if (mode === '3d' && !three && !unavailable) void prepareThree();
       if (three) three.controls.enabled = mode === '3d' && !unavailable;
-      resizeThree();
       updateCaption();
+      resizeThree();
     },
     dispose() {
       disposed = true;

@@ -306,3 +306,73 @@ test('a browser without WebGL 2 can continue the same experiment in 2D', async (
   await expect(page.locator('#step-count')).toHaveText('2');
   await expectValues(page, [4.5, 5, 5.5, 6.5, 7, 7.5]);
 });
+
+test('reading method and model details preserves a paused experiment and its history', async ({ page }) => {
+  await page.locator('#preset').selectOption('chain');
+  await page.locator('#step-button').click();
+  await page.locator('#link-2-3').click();
+  await page.locator('#step-button').click();
+  const beforeReading = await snapshot(page);
+  expect(beforeReading.step).toBe(2);
+  expect(beforeReading.events).toContain('k=1: remove A3–A4');
+
+  for (const id of ['method-details', 'model-details']) {
+    const disclosure = page.locator(`#${id}`);
+    const summary = disclosure.locator(':scope > summary');
+    await expect(disclosure).not.toHaveAttribute('open', '');
+    await summary.focus();
+    await page.keyboard.press('Enter');
+    await expect(disclosure).toHaveAttribute('open', '');
+    expect(await snapshot(page)).toEqual(beforeReading);
+    await page.keyboard.press('Space');
+    await expect(disclosure).not.toHaveAttribute('open', '');
+    expect(await snapshot(page)).toEqual(beforeReading);
+  }
+
+  await expect(page.locator('#run-status')).toContainText('Paused');
+  await page.locator('#step-button').click();
+  await expect(page.locator('#step-count')).toHaveText('3');
+  await expect(page.locator('#event-log')).toContainText('k=1: remove A3–A4');
+});
+
+test('bookmarks open hidden technical content without resetting the experiment', async ({ page }) => {
+  await page.goto('/#comparison-table');
+  await expect(page).toHaveURL('/consensus/#comparison-table');
+  await expect(page.locator('.comparison-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#comparison-table')).toBeVisible();
+  await expect(page.locator('#comparison-table tbody tr')).toHaveCount(5);
+  await expect(page.locator('#comparison-table tbody tr').nth(2)).toContainText('Not reached in 1,000 steps');
+
+  await page.locator('#step-button').click();
+  const beforeHashChange = await snapshot(page);
+  await page.evaluate(() => { window.location.hash = 'model-equation'; });
+  await expect(page.locator('#model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#model-equation')).toBeVisible();
+  expect(await snapshot(page)).toEqual(beforeHashChange);
+
+  await page.reload();
+  await expect(page.locator('#model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#model-equation')).toBeVisible();
+  await expectValues(page, initialValues);
+});
+
+test('the introduction and technical explanation remain readable without JavaScript', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  try {
+    const page = await context.newPage();
+    await page.goto('/consensus/');
+    await expect(page.locator('#lesson-title')).toContainText(/consensus/i);
+    await expect(page.locator('.no-script-note')).toContainText('JavaScript');
+    await expect(page.locator('.no-script-note')).toBeVisible();
+    await page.locator('#method-details > summary').click();
+    await expect(page.locator('#method-details')).toHaveAttribute('open', '');
+    await expect(page.locator('#method-details')).toContainText(/synchronous/i);
+    await page.locator('#model-details > summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#model-equation')).toBeVisible();
+    await expect(page.locator('#model-equation')).toContainText('xᵢ');
+    await expect(page.locator('#model .reference a')).toHaveAttribute('href', 'https://www.cds.caltech.edu/~murray/papers/2003f_om04-tac.html');
+  } finally {
+    await context.close();
+  }
+});
