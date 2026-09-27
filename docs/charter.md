@@ -2,9 +2,13 @@
 
 ## Purpose
 
-Provide interactive, reproducible experiments that help users understand and
-compare multi-robot algorithms and architectures. The tool combines explanations,
-state visualization, configurable scenarios and quantitative results.
+ARGOS Lab helps users understand how things work through interactive,
+reproducible experiments. The tool combines explanations, state visualization,
+configurable scenarios and quantitative results.
+
+The current collection explores algorithms, robotics and software systems.
+Multi-robot coordination is one topic alongside planning, estimation, control
+and distributed execution.
 
 Serve both curious visitors and technical readers through accessible explanations
 and technical detail. Twenty-three workshops combine interactive lessons with

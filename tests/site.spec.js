@@ -29,7 +29,7 @@ test('home and catalog expose real entry points without heavy or external reques
   page.on('request', (request) => urls.push(request.url()));
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Small machines\.\s*A world of questions\./);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Small experiments\.\s*A world of questions\./);
   await readyTerrain(page);
   await expect(page.locator('.scene-link')).toHaveAttribute('href', '/consensus/');
   await expect(page.locator('.site-primary')).toHaveAttribute('href', '/workshops/');

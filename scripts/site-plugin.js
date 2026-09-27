@@ -18,9 +18,9 @@ function renderHeader(path, base) {
   const inCatalog = /\/workshops(?:\/|$)/.test(path);
   const onHome = path === '/' || path === '/index.html';
   return `<header class="argos-header">
-    <a class="argos-brand" href="${siteUrl('/', base)}" aria-label="ARGOS Swarm Lab home">
+    <a class="argos-brand" href="${siteUrl('/', base)}" aria-label="ARGOS Lab home">
       <span class="argos-mark" aria-hidden="true"></span>
-      <span>ARGOS <small>SWARM LAB</small></span>
+      <span>ARGOS <small>LAB</small></span>
     </a>
     <button class="argos-menu-toggle" type="button" aria-expanded="false" aria-controls="argos-primary-nav">Menu <span aria-hidden="true">+</span></button>
     <nav id="argos-primary-nav" class="argos-primary-nav" aria-label="Main navigation">
@@ -47,7 +47,7 @@ function renderWorkshopNavigation(workshop, base) {
 }
 
 function renderFooter(base) {
-  return `<footer class="argos-footer"><a class="argos-footer-brand" href="${siteUrl('/', base)}">ARGOS <span>/ SWARM LAB</span></a><p>Experiments for curious minds.</p><nav class="argos-footer-links" aria-label="Footer navigation"><a href="${siteUrl('/#about', base)}">About the lab</a><a href="${siteUrl('/workshops/', base)}">Workshop library <span aria-hidden="true">↗</span></a></nav></footer>`;
+  return `<footer class="argos-footer"><a class="argos-footer-brand" href="${siteUrl('/', base)}">ARGOS <span>/ LAB</span></a><p>Experiments for curious minds.</p><nav class="argos-footer-links" aria-label="Footer navigation"><a href="${siteUrl('/#about', base)}">About the lab</a><a href="${siteUrl('/workshops/', base)}">Workshop library <span aria-hidden="true">↗</span></a></nav></footer>`;
 }
 
 /** Render shared navigation into static HTML so every route works without JavaScript. */

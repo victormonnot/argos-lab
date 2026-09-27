@@ -1,8 +1,11 @@
-# ARGOS Swarm Lab
+# ARGOS Lab
 
-An interactive tool for exploring multi-robot coordination through reproducible
-experiments. Change a parameter, observe collective behavior, introduce a failure
-and compare the results.
+An educational lab for understanding how things work through reproducible
+experiments. Change a parameter, inspect the result, introduce a failure
+and compare outcomes.
+
+The current collection explores algorithms, robotics and software systems,
+from individual estimation and planning to multi-agent coordination.
 
 The home page introduces the lab; `/workshops/` lets you explore all 23 workshops
 by question, theme, difficulty and execution mode. Each entry explains recommended
