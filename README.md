@@ -359,6 +359,11 @@ same static target once, then exchange estimates along a directed ring. Compare
 fusion** with immutable IDs, and **Covariance Intersection (CI)** with fixed
 half weights. Every method uses the same observations and twelve-round window.
 
+The opening diagram traces a reading shared by two summaries. Four illustrated
+questions lead into the experiment, while method assumptions, equations and
+paired comparisons expand on demand. Reading those explanations leaves the
+active round, selected observer and unapplied seed unchanged.
+
 1. Advance naive fusion to round 2. Its reported variance is 0.16 m² per axis,
    but the true expected variance is 0.24 m²: summaries already overlap.
 2. Compare unique-measurement fusion. All three originals arrive by round 2,

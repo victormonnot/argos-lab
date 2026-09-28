@@ -1,6 +1,3 @@
-import './style.css';
-import './mission.css';
-import './fusion.css';
 import { FUSION_ROUNDS, RESTORE_ROUND, METHODS, SCHEDULES, createFusionRun, stepFusion, resetFusion, finishFusion, summarizeFusion, compareFusion, compareFusionSeeds } from './fusion-model.js';
 import { createFusionView } from './fusion-view.js';
 
@@ -55,7 +52,7 @@ for (const mode of ['2d', '3d']) $(`#fusion-${mode}`).addEventListener('click', 
 });
 document.querySelectorAll('[data-fusion-case]').forEach((button) => button.addEventListener('click', () => {
   const [method, schedule] = button.dataset.fusionCase.split(':'); configure({ method, schedule, seed: 1 });
-  $('#fusion-experiment').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#fusion-experiment').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
 }));
 $('#fusion-comparisons').addEventListener('toggle', () => {
   if (!$('#fusion-comparisons').open || $('#fusion-reference-table').children.length) return;
@@ -67,12 +64,12 @@ $('#fusion-comparisons').addEventListener('toggle', () => {
 function renderNetwork() {
   const local = run.initial.method === 'local';
   const cut = run.initial.schedule === 'cut' || (run.initial.schedule === 'recovery' && run.round < RESTORE_ROUND);
-  const color = (broken) => local ? '#a4aaa5' : broken ? '#b4774f' : '#448571';
+  const color = (broken) => local ? '#899699' : broken ? '#947658' : '#446e91';
   const nodes = [[45, 96], [145, 27], [245, 96]];
   const arrows = [
     '<path d="M62 82L125 39"/>', '<path d="M165 40L226 82"/>', '<path d="M225 108H65"/>',
   ];
-  $('#fusion-network').innerHTML = `<svg viewBox="0 0 290 145" role="img" aria-label="Directed communication: A1 to A2, A2 to A3, A3 to A1. ${local ? 'No messages sent.' : cut ? 'A3 to A1 is cut.' : 'All links available.'}"><defs>${[false, true].map((broken) => `<marker id="fusion-arrow-${broken}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="${color(broken)}"/></marker>`).join('')}</defs>${arrows.map((path, index) => `<g data-fusion-link="${index}" data-available="${!local && !(index === 2 && cut)}" fill="none" stroke="${color(index === 2 && cut)}" stroke-width="2" stroke-dasharray="${local || (index === 2 && cut) ? '5 4' : 'none'}" marker-end="url(#fusion-arrow-${index === 2 && cut})">${path}</g>`).join('')}${nodes.map(([x, y], id) => `<circle cx="${x}" cy="${y}" r="19" fill="#f1f6ef" stroke="#849b8e"/><text x="${x}" y="${y + 5}" text-anchor="middle" fill="#264d41" font-size="14">${agentName(id)}</text>`).join('')}<text x="145" y="135" text-anchor="middle" fill="${color(cut)}" font-size="12">${local ? 'No sharing' : cut ? 'A3 → A1: dropped' : 'A3 → A1: available'}</text></svg>`;
+  $('#fusion-network').innerHTML = `<svg viewBox="0 0 290 145" role="img" aria-label="Directed communication: A1 to A2, A2 to A3, A3 to A1. ${local ? 'No messages sent.' : cut ? 'A3 to A1 is cut.' : 'All links available.'}"><defs>${[false, true].map((broken) => `<marker id="fusion-arrow-${broken}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="${color(broken)}"/></marker>`).join('')}</defs>${arrows.map((path, index) => `<g data-fusion-link="${index}" data-available="${!local && !(index === 2 && cut)}" fill="none" stroke="${color(index === 2 && cut)}" stroke-width="2" stroke-dasharray="${local || (index === 2 && cut) ? '5 4' : 'none'}" marker-end="url(#fusion-arrow-${index === 2 && cut})">${path}</g>`).join('')}${nodes.map(([x, y], id) => `<circle cx="${x}" cy="${y}" r="19" fill="#f3f4f1" stroke="#97a8ae"/><text x="${x}" y="${y + 5}" text-anchor="middle" fill="#34434b" font-size="14">${agentName(id)}</text>`).join('')}<text x="145" y="135" text-anchor="middle" fill="${color(cut)}" font-size="12">${local ? 'No sharing' : cut ? 'A3 → A1: dropped' : 'A3 → A1: available'}</text></svg>`;
   $('#fusion-link-state').textContent = local ? 'The no-sharing baseline sends no packets.' : run.initial.schedule === 'recovery'
     ? run.round < RESTORE_ROUND ? 'A3 → A1 drops rounds 1–4; the round-5 packet will be delivered.' : 'A3 → A1 is restored. Earlier dropped packets are not replayed.'
     : cut ? 'A3 → A1 is cut throughout. The other two directions deliver normally.' : 'Every link delivers one prior-state packet per round.';
@@ -114,10 +111,12 @@ function renderUpdate(summary, observer) {
   $('#fusion-evaluation').innerHTML = evidence.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('');
 }
 
-function renderChart(observer) {
-  const max = 1.28, X = (round) => 48 + round / FUSION_ROUNDS * 346, Y = (value) => 164 - value / max * 134;
+function renderChart(observer = Number($('#fusion-observer').value)) {
+  const width = Math.max(240, Math.round($('#fusion-chart').clientWidth));
+  const height = 230, left = 46, right = width - 20, top = 42, bottom = height - 36;
+  const max = 1.28, X = (round) => left + round / FUSION_ROUNDS * (right - left), Y = (value) => bottom - value / max * (bottom - top);
   const path = (field) => run.history.map((sample, index) => `${index ? 'L' : 'M'}${X(sample.round).toFixed(2)},${Y(sample[field][observer]).toFixed(2)}`).join(' ');
-  $('#fusion-chart').innerHTML = `<svg viewBox="0 0 425 205" role="img" aria-label="${agentName(observer)} expected and reported covariance traces by round"><text x="48" y="17" font-size="12" fill="#58675c">${agentName(observer)} · covariance trace (m²)</text>${[0, .64, 1.28].map((value) => `<path d="M48 ${Y(value)}H394" stroke="#e2e5db"/><text x="38" y="${Y(value) + 4}" text-anchor="end" font-size="12" fill="#58675c">${value.toFixed(2)}</text>`).join('')}<path d="${path('expectedTrace')}" stroke="#217761" stroke-width="3" fill="none"/><path d="${path('reportedTrace')}" stroke="#9578ad" stroke-width="2" stroke-dasharray="6 4" fill="none"/>${[0, 3, 6, 9, 12].map((round) => `<text x="${X(round)}" y="183" text-anchor="middle" font-size="12" fill="#58675c">${round}</text>`).join('')}<text x="394" y="201" text-anchor="end" font-size="12" fill="#58675c">Communication round</text></svg>`;
+  $('#fusion-chart').innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${agentName(observer)} expected and reported covariance traces by round"><text x="${left}" y="17">${agentName(observer)} · covariance trace (m²)</text>${[0, .64, 1.28].map((value) => `<path d="M${left} ${Y(value)}H${right}" stroke="#d6dddc"/><text x="${left - 9}" y="${Y(value) + 4}" text-anchor="end">${value.toFixed(2)}</text>`).join('')}<path d="${path('expectedTrace')}" stroke="#446e91" stroke-width="2" fill="none"/><path d="${path('reportedTrace')}" stroke="#947658" stroke-width="2" stroke-dasharray="6 4" fill="none"/>${[0, 3, 6, 9, 12].map((round) => `<text x="${X(round)}" y="${bottom + 17}" text-anchor="middle">${round}</text>`).join('')}<text x="${right}" y="${height - 1}" text-anchor="end">Communication round</text></svg>`;
 }
 
 function render() {
@@ -149,6 +148,38 @@ function render() {
   renderNetwork(); renderUpdate(summary, observer); renderChart(observer); view.update(run, observer);
 }
 
-window.addEventListener('pagehide', () => { stop(); view.dispose(); });
+// Reading explanations and resizing never change the communication round.
+function revealFragment() {
+  let id;
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+  const target = document.getElementById(id);
+  if (!target) return;
+  let opened = false;
+  for (let ancestor = target; ancestor; ancestor = ancestor.parentElement) {
+    if (ancestor instanceof HTMLDetailsElement && !ancestor.open) {
+      ancestor.open = true;
+      opened = true;
+    }
+  }
+  if (opened) requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+}
+let chartWidth = Math.round($('#fusion-chart').clientWidth), chartFrame = null;
+const chartResize = new ResizeObserver(() => {
+  const width = Math.round($('#fusion-chart').clientWidth);
+  if (width !== chartWidth) {
+    chartWidth = width;
+    cancelAnimationFrame(chartFrame);
+    chartFrame = requestAnimationFrame(() => renderChart());
+  }
+});
+chartResize.observe($('#fusion-chart'));
+window.addEventListener('hashchange', revealFragment);
+function dispose() {
+  stop(); view.dispose(); chartResize.disconnect(); cancelAnimationFrame(chartFrame);
+  window.removeEventListener('hashchange', revealFragment);
+}
+window.addEventListener('pagehide', dispose);
+if (import.meta.hot) import.meta.hot.dispose(dispose);
 window.addEventListener('pageshow', (event) => { if (event.persisted) window.location.reload(); });
 syncInputs(); render();
+revealFragment();

@@ -99,7 +99,7 @@ experiment or rewinds a recording.
 `src/site/shell.css` styles the common navigation. `src/site/site.css` styles the
 home and common editorial elements; `src/site/catalog.css` adds the catalog's
 layout. Pearl surfaces, graphite text and steel-blue accents frame discovery.
-Workshops 01–06 share `src/lesson.css`: a worked example, experiment,
+Workshops 01–07 share `src/lesson.css`: a worked example, experiment,
 illustrated questions and optional technical explanations. Their renderers and
 workshop-specific styles remain separate. The stylesheet is linked from HTML
 so reading does not depend on the experiment's JavaScript. Native disclosures
@@ -118,6 +118,12 @@ Workshop 06 uses `src/localization.css` and its own light renderer. Solid truth
 and a hollow or wireframe estimate distinguish physical position from the
 controller's information. Its worked example, sensor inspector and optional
 filter equations preserve the active run and seed-application behavior.
+Workshop 07 uses `src/fusion.css` and a separately scoped light renderer.
+Its opening diagram traces overlapping original evidence; four illustrated
+questions compare sharing, deduplication, Covariance Intersection and link loss.
+Distinct estimate shapes and offset labels preserve the exact positions and
+covariance contours when estimates converge. Packet contents and evaluator
+provenance remain separate, and opening explanations never advances a round.
 Fonts are served locally with their [license notices](../public/fonts/README.md).
 The home page has a static illustration and direct thematic links when its
 canvas cannot run. It has no automatic animation or background simulation.

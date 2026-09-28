@@ -8,6 +8,22 @@ const snapshot = async (page) => ({
   update: await page.locator('#fusion-update').innerHTML(),
   coefficients: await page.locator('[data-fusion-coefficient]').evaluateAll((cells) => cells.map((cell) => cell.dataset.rawValue)),
 });
+const readingSnapshot = async (page) => ({
+  ...await snapshot(page),
+  method: await page.locator('#fusion-algorithm').inputValue(),
+  schedule: await page.locator('#fusion-schedule').inputValue(),
+  observer: await page.locator('#fusion-observer').inputValue(),
+  seedDraft: await page.locator('#fusion-seed').inputValue(),
+  seedError: await page.locator('#fusion-seed-error').textContent(),
+  status: await page.locator('#fusion-status').textContent(),
+  outcome: await page.locator('#fusion-outcome').textContent(),
+  updateKind: await page.locator('#fusion-update-kind').textContent(),
+  ledger: await page.locator('#fusion-ledger').innerHTML(),
+  ledgerChange: await page.locator('#fusion-ledger-change').textContent(),
+  evaluation: await page.locator('#fusion-evaluation').innerHTML(),
+  links: await page.locator('[data-fusion-link]').evaluateAll((items) => items.map((item) => [item.dataset.fusionLink, item.dataset.available])),
+  geometry: await page.locator('[data-fusion-contour], [data-fusion-trail], [data-fusion-truth], [data-fusion-estimate]').evaluateAll((items) => items.map((item) => item.outerHTML)),
+});
 const means = async (page) => page.locator('#fusion-states tr').evaluateAll((rows) => rows.map((row) => [...row.querySelectorAll('td')].slice(0, 2).map((cell) => cell.dataset.rawValue)));
 async function freezeClock(page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -21,7 +37,7 @@ test.beforeEach(async ({ page }) => {
 test.afterEach(async ({ page }) => expect(browserErrors.get(page)).toEqual([]));
 
 test('overlap appears at round two and naive summaries understate uncertainty without new observations', async ({ page }) => {
-  await expect(page.locator('h1')).toHaveText('Covariance Intersection. Sharing is not sensing.');
+  await expect(page.locator('h1')).toHaveText('Shared estimates.');
   await expect(page.locator('#fusion-reported')).toHaveText('1.280000 m²');
   await expect(page.locator('[data-fusion-estimate]')).toHaveCount(3);
   await expect(page.locator('#fusion-viewport canvas')).toHaveCount(0);
@@ -143,4 +159,111 @@ test('keyboard, narrow layout, workshop navigation and unavailable WebGL remain 
   await page.reload(); await page.locator('#fusion-3d').click(); await expect(page.locator('#fusion-viewport')).toContainText('3D is unavailable');
   await page.locator('#fusion-2d').click(); await page.locator('#fusion-finish').click();
   await expect(page.locator('#fusion-round')).toHaveText('12'); await expect(page.locator('#fusion-ratio')).toHaveText('1365.33×');
+});
+
+test('reading disclosures preserves packet recovery, the inspected agent and an unapplied seed', async ({ page }) => {
+  await page.locator('[data-fusion-case="ledger:recovery"]').click();
+  await page.locator('#fusion-observer').selectOption('1');
+  await page.locator('#fusion-seed').fill('7');
+  for (let round = 0; round < 4; round += 1) await page.locator('#fusion-step').click();
+
+  for (const phase of [{ round: '4', available: 'false' }, { round: '5', available: 'true' }]) {
+    if (phase.round === '5') await page.locator('#fusion-restore').click();
+    await expect(page.locator('#fusion-round')).toHaveText(phase.round);
+    await expect(page.locator('[data-fusion-link="2"]')).toHaveAttribute('data-available', phase.available);
+    const beforeReading = await readingSnapshot(page);
+    expect(beforeReading.observer).toBe('1');
+    expect(beforeReading.seedDraft).toBe('7');
+    expect(beforeReading.status).toBe('Paused');
+
+    for (const id of ['fusion-method-details', 'fusion-model-details']) {
+      const disclosure = page.locator(`#${id}`);
+      await expect(disclosure).not.toHaveAttribute('open', '');
+      await disclosure.locator(':scope > summary').focus();
+      await page.keyboard.press('Enter');
+      await expect(disclosure).toHaveAttribute('open', '');
+      expect(await readingSnapshot(page)).toEqual(beforeReading);
+      await page.keyboard.press('Space');
+      await expect(disclosure).not.toHaveAttribute('open', '');
+      expect(await readingSnapshot(page)).toEqual(beforeReading);
+    }
+  }
+
+  const recovered = await snapshot(page);
+  await page.locator('#fusion-reset').click();
+  await expect(page.locator('#fusion-seed')).toHaveValue('1');
+  await expect(page.locator('#fusion-observer')).toHaveValue('1');
+  await page.locator('#fusion-restore').click();
+  expect(await snapshot(page)).toEqual(recovered);
+  await page.locator('#fusion-step').click();
+  await expect(page.locator('#fusion-round')).toHaveText('6');
+  await expect(page.locator('#fusion-ledger tr')).toHaveCount(3);
+});
+
+test('bookmarks reveal comparisons and fusion equations without replacing an active run', async ({ page }) => {
+  await page.goto('/fusion/#fusion-seed-table');
+  await expect(page.locator('#fusion-comparisons')).toHaveAttribute('open', '');
+  await expect(page.locator('#fusion-seed-table')).toBeVisible();
+  await expect(page.locator('#fusion-reference-table tr')).toHaveCount(10);
+  await expect(page.locator('#fusion-seed-table tr')).toHaveCount(10);
+  await expect(page.locator('#fusion-reference-table tr').nth(1)).toContainText('1365.3335');
+
+  await page.locator('#fusion-seed').fill('7');
+  await page.locator('#fusion-seed-form button').click();
+  await page.locator('#fusion-observer').selectOption('2');
+  await page.locator('#fusion-round-two').click();
+  await page.locator('#fusion-seed').fill('11');
+  const beforeHashChange = await readingSnapshot(page);
+  expect(beforeHashChange.round).toBe('2');
+  expect(beforeHashChange.observer).toBe('2');
+  expect(beforeHashChange.seedDraft).toBe('11');
+  await page.evaluate(() => { window.location.hash = 'fusion-equation'; });
+  await expect(page.locator('#fusion-model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#fusion-equation')).toBeVisible();
+  expect(await readingSnapshot(page)).toEqual(beforeHashChange);
+
+  const appliedRun = await snapshot(page);
+  await page.locator('#fusion-reset').click();
+  await expect(page.locator('#fusion-seed')).toHaveValue('7');
+  await page.locator('#fusion-round-two').click();
+  expect(await snapshot(page)).toEqual(appliedRun);
+  await page.reload();
+  await expect(page.locator('#fusion-model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#fusion-equation')).toBeVisible();
+  await expect(page.locator('#fusion-round')).toHaveText('0');
+  await expect(page.locator('#fusion-algorithm')).toHaveValue('naive');
+  await expect(page.locator('#fusion-schedule')).toHaveValue('ring');
+  await expect(page.locator('#fusion-observer')).toHaveValue('0');
+  await expect(page.locator('#fusion-seed')).toHaveValue('1');
+});
+
+test('the static lesson, fusion rules and sources remain readable on mobile without JavaScript', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL, viewport: { width: 390, height: 844 } });
+  try {
+    const page = await context.newPage();
+    const stylesheets = [];
+    page.on('response', (response) => {
+      if (response.request().resourceType() === 'stylesheet' && response.ok()) stylesheets.push(response.url());
+    });
+    await page.goto('/fusion/');
+    await expect(page.locator('h1')).toHaveText('Shared estimates.');
+    await expect(page.locator('.no-script-note')).toBeVisible();
+    await expect(page.locator('.no-script-note')).toContainText('JavaScript');
+    for (const name of ['lesson', 'fusion']) {
+      expect(stylesheets.some((url) => new URL(url).pathname === `/src/${name}.css`)).toBe(true);
+    }
+    await page.locator('#fusion-method-details > summary').click();
+    await expect(page.locator('#fusion-method-details')).toHaveAttribute('open', '');
+    await expect(page.locator('#fusion-method-details')).toContainText('Three readings, one browser');
+    await page.locator('#fusion-model-details > summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#fusion-equation')).toBeVisible();
+    await expect(page.locator('#fusion-equation')).toContainText('P⁺ = (Pₐ⁻¹ + Pᵦ⁻¹)⁻¹');
+    await expect(page.locator('#fusion-equation')).toContainText('P⁺ = (ωPₐ⁻¹ + (1 − ω)Pᵦ⁻¹)⁻¹');
+    await expect(page.locator('#fusion-method .reference a').nth(0)).toHaveAttribute('href', 'https://doi.org/10.1109/ACC.1997.609105');
+    await expect(page.locator('#fusion-method .reference a').nth(1)).toHaveAttribute('href', 'https://publikationen.bibliothek.kit.edu/1000067530/179593312');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  } finally {
+    await context.close();
+  }
 });

@@ -11,6 +11,40 @@ position with fresh observations. Here three stationary agents each observe one
 static target once, then exchange information without taking another measurement.
 This isolates shared evidence and unknown cross-correlation from motion control.
 
+## Reading structure
+
+The opening diagram follows A1's second naive update on the intact ring. Its
+prior contains equal parts z1 and z3; the incoming A3 summary contains equal
+parts z2 and z3. Combining the summaries gives coefficients `(1/4, 1/4, 1/2)`.
+The diagram shows evaluator provenance, not IDs carried by summary packets.
+
+The worked covariance comparison reports trace `0.32 m²` versus exact expected
+trace `0.48 m²`, an understatement by a factor of 1.5. Trace sums the two
+coordinate variances. Expected covariance describes hypothetical sensor draws,
+not the realized error of one seed. These coefficients and covariances do not
+depend on which measurement seed is used.
+
+Four illustrated questions compare naive fusion with no sharing, counting
+unique readings, fixed-half CI, and a cut/restored direction. All guided cases
+start paused with seed 1. The six case actions retain their method/schedule
+choices; the experiment also exposes all combinations directly.
+
+Method assumptions, both comparison tables and the technical explanation use
+native disclosures. Static explanations and source links remain available
+without JavaScript. With JavaScript, fragment navigation opens the containing
+disclosure without changing the active run, selected observer or draft seed.
+The sensor seed is applied only through its form; Reset retains applied settings.
+
+The light 2D and 3D views show the same means, revision trails and reported
+covariance. Estimate shapes identify A1/A2/A3; annotation offsets keep converged
+labels readable without displacing the estimates. In 3D, observer drones stay
+at fixed illustrative locations and heights. They do not move as estimates
+change. Chart resizing changes the display only.
+
+The closing link continues the perception path at
+[cooperative localization](11-cooperative-localization.md), where moving robots
+use absolute and relative observations and a joint filter retains correlation.
+
 ## Method profile
 
 | Aspect | Implemented choice | Meaning |
