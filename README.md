@@ -293,8 +293,13 @@ the **Manhattan heuristic** finds a shortest four-neighbor route. **Dijkstra**
 solves the same graph problem using a zero heuristic. Both feed the same
 constant-speed **waypoint follower**; a direct-to-goal baseline skips planning.
 
+The opening map separates a `7 m` lower bound, the `17 m` planned route and
+`0 m` of executed travel. Four illustrated questions lead from the initial
+detour to search effort, direct contact and an unreachable goal. Search history
+is computed in this browser; inspecting it does not rewind the robot's motion.
+
 1. Load **A* around the U**. Inspect the 17 m route before any motion occurs.
-2. Replay the recorded search: `g` is discovered distance from start, `h` is a
+2. Inspect the completed search: `g` is discovered distance from start, `h` is a
    remaining lower bound and `f=g+h` determines the next cell to pop. The final
    route stays visible separately; inspecting search history does not move the robot.
 3. Compare Dijkstra: the same 17 m shortest route takes 95 pops instead of 30

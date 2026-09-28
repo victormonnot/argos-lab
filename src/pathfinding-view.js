@@ -1,8 +1,9 @@
+import './pathfinding-view.css';
 import { cellCenter, cellXY } from './pathfinding-model.js';
 import { createWorkshopDrone, setWorkshopDrone, createWorkshopStage, addWorkshopCameraUI } from './workshop-scene.js';
 
 const NS = 'http://www.w3.org/2000/svg';
-const COLORS = { floor: '#19372f', wall: '#526762', open: '#365e49', closed: '#304746', current: '#656037', route: '#f1c17d', trail: '#72dabb', ink: '#dcebe2', collision: '#f3a291' };
+const COLORS = { floor: '#f7f9f5', wall: '#c2cac6', open: '#e1ebf1', closed: '#ebefe8', current: '#eee4d6', route: '#94714f', trail: '#446e91', ink: '#273438', collision: '#a15e50' };
 const DISPLAY_HEIGHT = .8, WALL_HEIGHT = 1.65;
 
 function element(name, attributes = {}, text) {
@@ -30,7 +31,7 @@ function releaseGroup(group) {
 export function createPathfindingView(container, { selectCell = () => {} } = {}) {
   let run, mode = '2d', world, loading = false, failed = false, disposed = false, following = false;
   let options = { traceIndex: 0, selectedCell: null, showSearch: true };
-  const svg = element('svg', { viewBox: '0 0 760 600', class: 'path-svg', role: 'group', 'aria-label': 'Pathfinding grid. Select a cell to inspect it; arrow keys move between cells. The positive y direction is upward.' });
+  const svg = element('svg', { viewBox: '0 0 760 650', class: 'path-svg', role: 'group', 'aria-label': 'Pathfinding grid. Select a cell to inspect it; arrow keys move between cells. The positive y direction is upward.' });
   const layer = document.createElement('div'); layer.className = 'path-three'; layer.hidden = true;
   container.append(svg, layer);
 
@@ -55,6 +56,10 @@ export function createPathfindingView(container, { selectCell = () => {} } = {})
     if (!run || disposed) return;
     const focusedCell = svg.contains(document.activeElement) ? document.activeElement.dataset.pathCell : null;
     const { width, height } = run.grid, size = Math.min(660 / width, 495 / height);
+    // Keep map coordinates (and route points) fixed while sizing annotations
+    // in screen pixels, so the same grid remains readable on narrow screens.
+    const scale = Math.min(Math.max(1, container.clientWidth) / 760, Math.max(1, container.clientHeight) / 650);
+    const px = (value) => value / scale;
     const left = (760 - size * width) / 2, top = (555 - size * height) / 2;
     const X = (x) => left + x * size, Y = (y) => top + (height - y) * size;
     const blocked = new Set(run.grid.blocked), search = searchCells();
@@ -64,11 +69,11 @@ export function createPathfindingView(container, { selectCell = () => {} } = {})
       const [x, y] = cellXY(id, width), state = searchState(id, search), wall = blocked.has(id);
       const description = [`Cell (${x}, ${y})`, wall ? 'wall' : 'free', id === run.grid.start ? 'start' : '', id === run.grid.goal ? 'goal' : '', state === 'none' ? '' : state === 'open' ? 'open frontier' : state === 'closed' ? 'closed settled' : 'current expansion'].filter(Boolean).join(', ');
       const group = element('g', { role: 'button', tabindex: id === activeCell ? 0 : -1, 'data-path-cell': id, 'data-search': state, 'aria-label': description, 'aria-pressed': String(id === options.selectedCell) });
-      group.append(element('rect', { x: X(x), y: Y(y + 1), width: size, height: size, fill: wall ? COLORS.wall : COLORS[state] ?? COLORS.floor, stroke: '#426055', 'stroke-width': .8 }));
-      if (wall) group.append(element('path', { d: `M${X(x + .23)},${Y(y + .23)}L${X(x + .77)},${Y(y + .77)}M${X(x + .23)},${Y(y + .77)}L${X(x + .77)},${Y(y + .23)}`, stroke: '#81928a', 'stroke-width': 1.2, 'pointer-events': 'none' }));
-      if (!wall && state !== 'none') group.append(element('text', { x: X(x + .79), y: Y(y + .7), fill: state === 'open' ? '#b9e5be' : '#c4d8d1', 'font-size': 14, 'font-weight': 600, 'text-anchor': 'middle', 'pointer-events': 'none' }, search.open.has(id) ? 'O' : '×'));
-      if (state === 'current') group.append(element('rect', { x: X(x) + 4, y: Y(y + 1) + 4, width: size - 8, height: size - 8, fill: 'none', stroke: COLORS.route, 'stroke-width': 2, 'stroke-dasharray': '4 3', 'pointer-events': 'none' }));
-      if (id === options.selectedCell) group.append(element('rect', { x: X(x) + 1.8, y: Y(y + 1) + 1.8, width: size - 3.6, height: size - 3.6, fill: 'none', stroke: '#ffffff', 'stroke-width': 2.5, 'pointer-events': 'none' }));
+      group.append(element('rect', { x: X(x), y: Y(y + 1), width: size, height: size, fill: wall ? COLORS.wall : COLORS[state] ?? COLORS.floor, stroke: '#cdd7d2', 'stroke-width': px(.7) }));
+      if (wall) group.append(element('path', { d: `M${X(x + .23)},${Y(y + .23)}L${X(x + .77)},${Y(y + .77)}M${X(x + .23)},${Y(y + .77)}L${X(x + .77)},${Y(y + .23)}`, stroke: '#7b8888', 'stroke-width': px(.8), 'pointer-events': 'none' }));
+      if (!wall && state !== 'none') group.append(element('text', { x: X(x + .79), y: Y(y + 1) + px(12), fill: state === 'open' ? '#446e91' : '#6f7e79', 'font-size': px(11), 'font-weight': 600, 'text-anchor': 'middle', 'pointer-events': 'none' }, search.open.has(id) ? 'O' : '×'));
+      if (state === 'current') group.append(element('rect', { x: X(x) + 4, y: Y(y + 1) + 4, width: size - 8, height: size - 8, fill: 'none', stroke: COLORS.route, 'stroke-width': px(1.2), 'stroke-dasharray': `${px(3)} ${px(2)}`, 'pointer-events': 'none' }));
+      if (id === options.selectedCell) group.append(element('rect', { x: X(x) + 1.8, y: Y(y + 1) + 1.8, width: size - 3.6, height: size - 3.6, fill: 'none', stroke: COLORS.ink, 'stroke-width': px(1.6), 'pointer-events': 'none' }));
       group.addEventListener('click', () => selectCell(id));
       group.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectCell(id); return; }
@@ -85,23 +90,23 @@ export function createPathfindingView(container, { selectCell = () => {} } = {})
     }
     const markings = element('g', { 'pointer-events': 'none', 'aria-hidden': 'true' });
     const route = routePoints();
-    if (route.length > 1) markings.append(element('polyline', { 'data-path-route': run.plan.method === 'direct' ? 'unchecked' : 'grid', points: route.map(([x, y]) => `${X(x)},${Y(y)}`).join(' '), fill: 'none', stroke: COLORS.route, 'stroke-width': 2.4, 'stroke-dasharray': '7 5', 'stroke-linejoin': 'round' }));
-    if (run.history.length > 1) markings.append(element('polyline', { 'data-path-trail': '', points: run.history.map(({ position: [x, y] }) => `${X(x)},${Y(y)}`).join(' '), fill: 'none', stroke: COLORS.trail, 'stroke-width': 3.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+    if (route.length > 1) markings.append(element('polyline', { 'data-path-route': run.plan.method === 'direct' ? 'unchecked' : 'grid', points: route.map(([x, y]) => `${X(x)},${Y(y)}`).join(' '), fill: 'none', stroke: COLORS.route, 'stroke-width': px(1.6), 'stroke-dasharray': `${px(5)} ${px(4)}`, 'stroke-linejoin': 'round' }));
+    if (run.history.length > 1) markings.append(element('polyline', { 'data-path-trail': '', points: run.history.map(({ position: [x, y] }) => `${X(x)},${Y(y)}`).join(' '), fill: 'none', stroke: COLORS.trail, 'stroke-width': px(2.3), 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
     const start = cellCenter(run.grid.start, width), goal = cellCenter(run.grid.goal, width);
-    markings.append(element('circle', { cx: X(start[0]), cy: Y(start[1]), r: 11, fill: 'none', stroke: '#b4cac0', 'stroke-width': 2 }));
-    markings.append(element('text', { x: X(start[0]) - 15, y: Y(start[1]) + 21, fill: '#dcebe2', 'font-size': 15, 'font-weight': 600 }, 'S'));
-    const gx = X(goal[0]), gy = Y(goal[1]);
-    markings.append(element('path', { d: `M${gx},${gy - 11}L${gx + 11},${gy}L${gx},${gy + 11}L${gx - 11},${gy}Z`, fill: '#213c31', stroke: COLORS.route, 'stroke-width': 2 }));
-    markings.append(element('text', { x: gx + 12, y: gy + 22, fill: COLORS.route, 'font-size': 15, 'font-weight': 600 }, 'G'));
+    markings.append(element('circle', { cx: X(start[0]), cy: Y(start[1]), r: px(6.5), fill: 'none', stroke: '#788a92', 'stroke-width': px(1.2) }));
+    markings.append(element('text', { x: X(start[0]) - px(10), y: Y(start[1]) + px(17), fill: COLORS.ink, 'font-size': px(11), 'font-weight': 600, stroke: '#fbfcfa', 'stroke-width': px(3), 'paint-order': 'stroke' }, 'S'));
+    const gx = X(goal[0]), gy = Y(goal[1]), goalRadius = px(6.5);
+    markings.append(element('path', { d: `M${gx},${gy - goalRadius}L${gx + goalRadius},${gy}L${gx},${gy + goalRadius}L${gx - goalRadius},${gy}Z`, fill: '#fbfcfa', stroke: COLORS.route, 'stroke-width': px(1.4) }));
+    markings.append(element('text', { x: gx + px(9), y: gy + px(17), fill: COLORS.route, 'font-size': px(11), 'font-weight': 600, stroke: '#fbfcfa', 'stroke-width': px(3), 'paint-order': 'stroke' }, 'G'));
     const waypoint = run.plan.waypoints[run.waypointIndex];
-    if (waypoint) markings.append(element('circle', { 'data-path-waypoint': run.waypointIndex, cx: X(waypoint[0]), cy: Y(waypoint[1]), r: 5, fill: 'none', stroke: '#ffffff', 'stroke-width': 2 }));
+    if (waypoint) markings.append(element('circle', { 'data-path-waypoint': run.waypointIndex, cx: X(waypoint[0]), cy: Y(waypoint[1]), r: px(3.7), fill: '#fbfcfa', stroke: COLORS.ink, 'stroke-width': px(1.1) }));
     const ax = X(run.position[0]), ay = Y(run.position[1]), agentColor = run.status === 'collision' ? COLORS.collision : COLORS.trail;
-    markings.append(element('circle', { 'data-path-agent': '', cx: ax, cy: ay, r: 8, fill: agentColor, stroke: '#102b23', 'stroke-width': 2 }));
-    markings.append(element('text', { x: ax - 12, y: ay - 13, fill: agentColor, 'font-size': 16, 'font-weight': 600, 'text-anchor': 'end' }, run.status === 'collision' ? 'A ×' : 'A'));
+    markings.append(element('circle', { 'data-path-agent': '', cx: ax, cy: ay, r: px(4.8), fill: agentColor, stroke: '#fbfcfa', 'stroke-width': px(1.3) }));
+    markings.append(element('text', { x: ax - px(8), y: ay - px(9), fill: agentColor, 'font-size': px(11), 'font-weight': 600, 'text-anchor': 'end', stroke: '#fbfcfa', 'stroke-width': px(3), 'paint-order': 'stroke' }, run.status === 'collision' ? 'A ×' : 'A'));
     svg.append(markings);
-    for (let x = 0; x < width; x += 1) svg.append(element('text', { x: X(x + .5), y: Y(0) + 22, fill: '#a7beb1', 'font-size': 13, 'text-anchor': 'middle' }, x));
-    for (let y = 0; y < height; y += 1) svg.append(element('text', { x: left - 14, y: Y(y + .5) + 5, fill: '#a7beb1', 'font-size': 13, 'text-anchor': 'end' }, y));
-    svg.append(element('text', { x: 380, y: 590, fill: '#a7beb1', 'font-size': 13, 'text-anchor': 'middle' }, 'Cell coordinates · 1 m spacing · y increases upward'));
+    for (let x = 0; x < width; x += 1) svg.append(element('text', { x: X(x + .5), y: Y(0) + px(17), fill: '#617077', 'font-size': px(10), 'text-anchor': 'middle' }, x));
+    for (let y = 0; y < height; y += 1) svg.append(element('text', { x: left - px(10), y: Y(y + .5) + px(3.5), fill: '#617077', 'font-size': px(10), 'text-anchor': 'end' }, y));
+    svg.append(element('text', { x: 380, y: Y(0) + px(38), fill: '#617077', 'font-size': px(10), 'text-anchor': 'middle' }, '1 m cells · y increases upward'));
     if (focusedCell !== null) svg.querySelector(`[data-path-cell="${focusedCell}"]`)?.focus({ preventScroll: true });
   }
 
@@ -132,7 +137,13 @@ export function createPathfindingView(container, { selectCell = () => {} } = {})
       controls = new OrbitControls(camera, renderer.domElement);
       controls.minDistance = 2; controls.maxDistance = 52; controls.maxPolarAngle = Math.PI / 2 - .12;
       controls.listenToKeyEvents(renderer.domElement);
-      createWorkshopStage(THREE, scene, renderer, { center: [run.grid.width / 2, -run.grid.height / 2], size: [run.grid.width, run.grid.height], grid: 1 });
+      createWorkshopStage(THREE, scene, renderer, {
+        center: [run.grid.width / 2, -run.grid.height / 2], size: [run.grid.width, run.grid.height], grid: 1,
+        palette: {
+          floor: '#e2e6e0', edge: '#a2ada7', trim: '#c6cec7', metal: '#8a999c', grid: '#617780',
+          lamp: '#e3ebed', lampEmissive: '#94acb8', sky: '#f4f6f4', ground: '#8b9189', sun: '#fff6e9',
+        },
+      });
       const grid = new THREE.Group(), paths = new THREE.Group(); scene.add(grid, paths);
       const agent = createWorkshopDrone(THREE, { color: COLORS.trail, size: .65, id: 'A' }); scene.add(agent);
       const projection = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
@@ -142,20 +153,20 @@ export function createPathfindingView(container, { selectCell = () => {} } = {})
         const ring = new THREE.Mesh(new THREE.RingGeometry(inner, outer, 32), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }));
         ring.rotation.x = -Math.PI / 2; scene.add(ring); return ring;
       };
-      const start = makeRing(.2, .24, '#b4cac0'), goal = makeRing(.2, .25, COLORS.route), waypoint = makeRing(.085, .12, '#ffffff');
+      const start = makeRing(.2, .24, '#788a92'), goal = makeRing(.2, .25, COLORS.route), waypoint = makeRing(.085, .12, COLORS.ink);
       const makeOutline = (inset, color) => {
         const points = [[inset, inset], [1 - inset, inset], [1 - inset, 1 - inset], [inset, 1 - inset]].map(([x, y]) => new THREE.Vector3(x, .065, -y));
         const outline = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color })); scene.add(outline); return outline;
       };
-      const selectedOutline = makeOutline(.03, '#ffffff'), currentOutline = makeOutline(.1, COLORS.route);
+      const selectedOutline = makeOutline(.03, COLORS.ink), currentOutline = makeOutline(.1, COLORS.route);
       const overlay = document.createElement('div'); overlay.className = 'path-labels'; overlay.setAttribute('aria-hidden', 'true');
       const label = (text, color, className) => {
         const span = document.createElement('span'); span.className = className; span.textContent = text; span.style.color = color; overlay.append(span); return span;
       };
-      const labels = { agent: label('A', COLORS.trail, 'path-agent-label'), start: label('S', '#dcebe2', 'path-site-label'), goal: label('G', COLORS.route, 'path-site-label'), waypoint: label('W', '#ffffff', 'path-waypoint-label') };
+      const labels = { agent: label('A', COLORS.trail, 'path-agent-label'), start: label('S', COLORS.ink, 'path-site-label'), goal: label('G', COLORS.route, 'path-site-label'), waypoint: label('W', COLORS.ink, 'path-waypoint-label') };
       layer.replaceChildren(renderer.domElement, overlay);
       const cameraUI = addWorkshopCameraUI(layer, { prefix: 'path',
-        caption: 'DISPLAY HEIGHT 0.8 m · OCCLUDING WALLS FADE · BLOCKED CELLS AND POINT CONTACT UNCHANGED',
+        caption: 'Planar point model · 0.8 m display height · occluding walls fade; their footprints stay blocked',
         onWhole: () => frameCamera(false), onFollow: () => frameCamera(true) });
       cameraUI.setFollowLabel('Follow drone');
       world = { THREE, renderer, scene, camera, controls, cameraUI, grid, paths, agent, projection, start, goal, waypoint, selectedOutline, currentOutline, overlay, labels, cells: [], walls: [], gridKey: null, history: null, plan: null };
@@ -185,7 +196,7 @@ export function createPathfindingView(container, { selectCell = () => {} } = {})
       if (!wall) mesh.rotation.x = -Math.PI / 2;
       mesh.position.set(x, wall ? WALL_HEIGHT / 2 : .016, -y); mesh.castShadow = wall; mesh.receiveShadow = true; world.grid.add(mesh);
       if (wall) {
-        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(wallGeometry), new THREE.LineBasicMaterial({ color: '#9aa996', transparent: true, opacity: .5 }));
+        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(wallGeometry), new THREE.LineBasicMaterial({ color: '#788a8d', transparent: true, opacity: .6 }));
         edges.position.copy(mesh.position); world.grid.add(edges);
         // Expand only the sightline test by the illustrative drone's extent.
         // The displayed wall geometry and the model's blocked cell stay exact.
@@ -200,7 +211,7 @@ export function createPathfindingView(container, { selectCell = () => {} } = {})
     const points = [];
     for (let x = 0; x <= width; x += 1) points.push(new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, 0, -height));
     for (let y = 0; y <= height; y += 1) points.push(new THREE.Vector3(0, 0, -y), new THREE.Vector3(width, 0, -y));
-    world.grid.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: '#48675b' })));
+    world.grid.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: '#b8c6c1' })));
     const origin = cellCenter(start, width), destination = cellCenter(goal, width);
     world.start.position.set(origin[0], .04, -origin[1]); world.goal.position.set(destination[0], .04, -destination[1]);
     if (world.gridKey === null) frameCamera(false);
@@ -215,7 +226,7 @@ export function createPathfindingView(container, { selectCell = () => {} } = {})
       cell.mesh.material.color.set(cell.wall ? COLORS.wall : COLORS[state] ?? COLORS.floor);
       cell.label.hidden = cell.wall || state === 'none';
       cell.label.textContent = search.open.has(id) ? 'O' : '×';
-      cell.label.style.color = state === 'open' ? '#b9e5be' : '#c4d8d1';
+      cell.label.style.color = state === 'open' ? '#446e91' : '#6f7e79';
       cell.visibleLabel = !cell.label.hidden;
     });
     const agentColor = run.status === 'collision' ? COLORS.collision : COLORS.trail;
@@ -263,9 +274,20 @@ export function createPathfindingView(container, { selectCell = () => {} } = {})
       world.controls.target.set(run.position[0], DISPLAY_HEIGHT, -run.position[1]);
       world.camera.position.copy(world.controls.target).add(new world.THREE.Vector3(-3.6, 4.1, 1.8));
     } else {
-      const span = Math.max(run.grid.width, run.grid.height), fit = Math.max(1, 1.08 / world.camera.aspect);
-      world.controls.target.set(run.grid.width / 2, .4, -run.grid.height / 2);
-      world.camera.position.copy(world.controls.target).add(new world.THREE.Vector3(-span * .65, span * 1.25, span * .65).multiplyScalar(fit));
+      // Fit the actual yard from its western opening, reserving room for
+      // the camera controls and model caption on desktop and narrow screens.
+      const direction = new world.THREE.Vector3(-.85, .95, .8).normalize();
+      const right = new world.THREE.Vector3(0, 1, 0).cross(direction).normalize();
+      const up = direction.clone().cross(right).normalize();
+      const tangent = Math.tan(world.camera.fov * Math.PI / 360);
+      const verticalRoom = Math.max(.35, 1 - 144 / Math.max(1, container.clientHeight));
+      world.controls.target.set(run.grid.width / 2, .35, -run.grid.height / 2);
+      let distance = 0;
+      for (const x of [-.6, run.grid.width + .6]) for (const y of [-.4, WALL_HEIGHT]) for (const z of [.6, -run.grid.height - .6]) {
+        const corner = new world.THREE.Vector3(x, y, z).sub(world.controls.target);
+        distance = Math.max(distance, corner.dot(direction) + Math.abs(corner.dot(right)) / (tangent * world.camera.aspect * .88), corner.dot(direction) + Math.abs(corner.dot(up)) / (tangent * verticalRoom));
+      }
+      world.camera.position.copy(world.controls.target).add(direction.multiplyScalar(distance));
     }
     world.controls.update(); drawThree();
   }
@@ -297,7 +319,9 @@ export function createPathfindingView(container, { selectCell = () => {} } = {})
     world.cells.forEach((cell) => place(cell.anchor, cell.label, cell.visibleLabel));
   }
   function resize() {
-    if (!world || failed || disposed) return;
+    if (disposed) return;
+    drawSvg();
+    if (!world || failed) return;
     const width = Math.max(1, container.clientWidth), height = Math.max(1, container.clientHeight);
     const changed = world.viewportWidth !== width || world.viewportHeight !== height;
     world.viewportWidth = width; world.viewportHeight = height;

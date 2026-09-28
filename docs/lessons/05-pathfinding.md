@@ -41,6 +41,37 @@ the illustrative airframe, only the affected wall cells become translucent;
 their outlines and shadows remain. This camera-dependent cutaway applies during
 motion and orbiting and does not change occupancy or point-contact evaluation.
 
+## Reading structure
+
+The opening illustration uses the default U map and the exact A* route. Before
+motion, the Manhattan lower bound is `7 m`, the planned route is `17 m`, and
+actual travel is `0 m`. The first edge goes from cell `(3,4)` to `(3,3)`, away
+from the goal to the right. After one second, the robot is at `(3.5,3.5) m` and
+its Euclidean goal distance is `sqrt(50)`, about `7.071 m`, up from `7 m`.
+The route subsequently exits the western opening and goes around the lower wall.
+
+Four illustrated questions separate planning from following, compare A* and
+Dijkstra's search effort, expose direct-to-goal contact and close the enclosure.
+Their six preset actions retain the same models. The nine reference runs expand
+without changing the active run. Diagrams use actual occupied cells and route
+coordinates; search counts describe these maps and tie rules, not computing time.
+
+The visible method summary states the full known map, exact position, four-neighbor
+search and separate waypoint follower. Native **Method & assumptions** and
+**Read the search, assumptions & sources** disclosures expose the full contract
+and primary references. Opening them preserves the selected search snapshot,
+inspected cell and physical execution. With JavaScript, fragment links reveal
+targets inside closed disclosures. The example, exercises and technical text
+remain styled and readable without JavaScript; execution requires it.
+
+The light views distinguish a dashed taupe planned route from the solid blue
+executed trail. Search state has explicit frontier/settled marks and text
+inspection; costs remain available independently of color. The 3D cutaway and
+fixed display altitude retain the same point-contact model. The closing link
+leads to position estimation, which adds uncertain observations to following
+a known route. Search history in this lesson is computed within the browser
+simulation, separate from the external recorded replays in later workshops.
+
 ## Graph and maps
 
 Use a 12 × 9 grid of 1 m square cells, indexed by `id = 12y + x`, with y increasing

@@ -1,6 +1,3 @@
-import './style.css';
-import './mission.css';
-import './pathfinding.css';
 import { PATH_MAPS, PATH_METHODS, PATH_DT, createPathRun, stepPath, resetPath, finishPath, comparePaths, cellXY, manhattan, pathExecutorObservation } from './pathfinding-model.js';
 import { createPathfindingView } from './pathfinding-view.js';
 
@@ -50,7 +47,7 @@ for (const mode of ['2d', '3d']) $(`#path-${mode}`).addEventListener('click', ()
     : 'S: start · G: goal · A: robot. Select a cell to inspect search costs. Robot marker size is illustrative; this is point motion.';
 });
 document.querySelectorAll('[data-path-case]').forEach((button) => button.addEventListener('click', () => {
-  configure(...button.dataset.pathCase.split(':')); $('#path-experiment').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  configure(...button.dataset.pathCase.split(':')); $('#path-experiment').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
 }));
 $('#path-comparisons').addEventListener('toggle', () => {
   if (!$('#path-comparisons').open || $('#path-comparison-table').children.length) return;
@@ -80,10 +77,14 @@ function renderSearch() {
   ].map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('');
 }
 function renderChart() {
-  const end = Math.max(10, Math.ceil(run.step * PATH_DT / 10) * 10), top = Math.max(8, Math.ceil(Math.max(...run.history.map((point) => point.goalDistance)) / 2) * 2);
-  const x = (time) => 37 + time / end * 345, y = (distance) => 152 - distance / top * 125;
+  const width = Math.max(240, Math.round($('#path-chart').clientWidth));
+  const height = 220, left = 34, right = 20, top = 38, bottom = 36;
+  const end = Math.max(10, Math.ceil(run.step * PATH_DT / 10) * 10);
+  const maximum = Math.max(8, Math.ceil(Math.max(...run.history.map((point) => point.goalDistance)) / 2) * 2);
+  const x = (time) => left + time / end * (width - left - right);
+  const y = (distance) => height - bottom - distance / maximum * (height - top - bottom);
   const path = run.history.map((point, id) => `${id ? 'L' : 'M'}${x(point.time).toFixed(2)},${y(point.goalDistance).toFixed(2)}`).join(' ');
-  $('#path-chart').innerHTML = `<svg viewBox="0 0 410 190" role="img" aria-label="Euclidean distance to goal over motion time"><text x="37" y="15" font-size="12" fill="#58675c">Distance to goal (m)</text>${[0, top / 2, top].map((value) => `<path d="M37 ${y(value)}H382" stroke="#e2e5db"/><text x="27" y="${y(value) + 4}" text-anchor="end" font-size="12" fill="#58675c">${value}</text>`).join('')}<path d="${path}" stroke="#217761" stroke-width="2.5" fill="none"/><text x="37" y="177" font-size="12" fill="#58675c">0 s</text><text x="382" y="177" text-anchor="end" font-size="12" fill="#58675c">${end} s</text></svg>`;
+  $('#path-chart').innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Euclidean distance to goal over motion time"><text x="${left}" y="17">Distance to goal (m)</text>${[0, maximum / 2, maximum].map((value) => `<path d="M${left} ${y(value)}H${width - right}" stroke="#dce3e1"/><text x="${left - 11}" y="${y(value) + 4}" text-anchor="end">${value}</text>`).join('')}<path d="${path}" stroke="#446e91" stroke-width="2.5" fill="none"/><text x="${left}" y="${height - 14}">0 s</text><text x="${width - right}" y="${height - 14}" text-anchor="end">${end} s</text></svg>`;
 }
 function render() {
   const terminal = run.status !== 'following', state = run.history.at(-1), observation = pathExecutorObservation(run);
@@ -109,6 +110,38 @@ function render() {
   $('#path-waypoints').innerHTML = run.plan.waypoints.length ? run.plan.waypoints.map((point, index) => `<li aria-current="${index === run.waypointIndex ? 'step' : 'false'}">${coordinates(point)}${index < run.waypointIndex ? ' · reached' : index === run.waypointIndex ? ' · target' : ''}</li>`).join('') : '<li>No route; no waypoint supplied.</li>';
   renderSearch(); renderChart(); view.update(run, { traceIndex, selectedCell, showSearch: $('#path-show-search').checked });
 }
-window.addEventListener('pagehide', () => { stop(); view.dispose(); });
+// Reading and resizing observe the current run and search snapshot.
+function revealFragment() {
+  let id;
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+  const target = document.getElementById(id);
+  if (!target) return;
+  let opened = false;
+  for (let ancestor = target; ancestor; ancestor = ancestor.parentElement) {
+    if (ancestor instanceof HTMLDetailsElement && !ancestor.open) {
+      ancestor.open = true;
+      opened = true;
+    }
+  }
+  if (opened) requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+}
+let chartWidth = Math.round($('#path-chart').clientWidth), chartFrame = null;
+const chartResize = new ResizeObserver(() => {
+  const width = Math.round($('#path-chart').clientWidth);
+  if (width !== chartWidth) {
+    chartWidth = width;
+    cancelAnimationFrame(chartFrame);
+    chartFrame = requestAnimationFrame(renderChart);
+  }
+});
+chartResize.observe($('#path-chart'));
+window.addEventListener('hashchange', revealFragment);
+function dispose() {
+  stop(); view.dispose(); chartResize.disconnect(); cancelAnimationFrame(chartFrame);
+  window.removeEventListener('hashchange', revealFragment);
+}
+window.addEventListener('pagehide', dispose);
+if (import.meta.hot) import.meta.hot.dispose(dispose);
 window.addEventListener('pageshow', (event) => { if (event.persisted) window.location.reload(); });
 syncInputs(); render();
+revealFragment();
