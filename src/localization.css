@@ -1,66 +1,111 @@
-.loc-intro { padding: 25px 0 30px; max-width: 1040px; }
-.loc-intro h1 { font-size: 2.45rem; line-height: 1.2; letter-spacing: -.06rem; margin: 12px 0; }
-.loc-intro h1 br { display: none; }
-.loc-intro>p:not(.eyebrow) { font-size: 1rem; color: var(--muted); }
-.loc-intro .loc-predict { margin-top: 12px; color: var(--ink); }
-.loc-lab { display: grid; grid-template-columns: minmax(0,1fr) 340px; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
-#loc-viewport { position: relative; width: 100%; min-width: 0; height: 540px; min-height: 400px; flex: 1; }
-.loc-svg,.loc-three { position: absolute; inset: 0; width: 100%; height: 100%; }
-.loc-three[hidden] { display: none; }
-.loc-three canvas { width: 100%; height: 100%; display: block; touch-action: none; }
-.loc-labels { position: absolute; inset: 0; pointer-events: none; }
-.loc-labels span { position: absolute; font-size: .8125rem; padding: 2px 4px; white-space: nowrap; background: #142c26e8; border-radius: 3px; }
-.loc-labels span[hidden] { display: none; }
-.loc-labels .loc-truth-label { transform: translate(calc(-100% - 8px),calc(-100% - 8px)); }
-.loc-labels .loc-estimate-label { transform: translate(9px,calc(-100% - 8px)); }
-.loc-labels .loc-goal-label { transform: translate(9px,8px); }
-.loc-labels .loc-fix-label { transform: translate(calc(-100% - 10px),8px); }
-.loc-three canvas:focus-visible { outline: 2px solid #d3e8ce; outline-offset: -3px; }
-.loc-webgl-message { padding: 30px; font-size: 1rem; line-height: 1.7; }
-.loc-legend { display: flex; flex-wrap: wrap; gap: 8px 15px; font-size: .8125rem; color: #b6c9be; padding: 10px 22px 0; }
-.loc-legend span:first-child { color: #72dabb; }
-.loc-legend span:nth-child(2) { color: #c1b0ff; }
-.loc-config { background: white; padding: 22px; min-width: 0; }
-.loc-config>label { display: block; font-size: .875rem; font-weight: 600; margin-bottom: 9px; }
-.loc-config>select { width: 100%; font-size: .875rem; margin-bottom: 16px; }
-#loc-description { font-size: .875rem; color: var(--muted); margin: -5px 0 22px; }
-.loc-config .loc-checkbox { display: flex; align-items: center; gap: 9px; }
-.loc-checkbox input { margin: 0; accent-color: #377355; }
-#loc-seed-form { margin: 16px 0; font-size: .875rem; }
-#loc-seed-form>div { display: flex; gap: 8px; margin-top: 9px; }
-#loc-seed { min-width: 0; width: 100%; font-size: .875rem; }
-#loc-seed-form button { white-space: nowrap; font-size: .8125rem; }
-.loc-error { font-size: .8125rem; color: #a24931; margin-top: 7px; }
-.loc-error:empty { display: none; }
-.loc-advance { display: flex; gap: 8px; margin: 18px 0 10px; }
-.loc-advance button { flex: 1; font-size: .8125rem; padding: 10px 6px; }
-.loc-config .wide { font-size: .875rem; }
-.loc-page .mission-outcome[data-status=false-arrival],.loc-page .mission-outcome[data-status=collision] { background: #f8ecdd; border-color: #b57b4e; color: #775027; }
-.loc-inspection { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 22px; }
-.loc-filter,.loc-evidence,.loc-state { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 24px; min-width: 0; }
-.loc-filter h3,.loc-evidence h3 { margin: 6px 0 14px; }
-.loc-filter .panel-heading { flex-wrap: wrap; align-items: start; }
-#loc-axis { font-size: .8125rem; }
-#loc-update-kind { font-size: .9375rem; margin: 14px 0; }
-.loc-details { margin: 14px 0 18px; }
-.loc-details>div { display: flex; justify-content: space-between; gap: 15px; border-bottom: 1px solid var(--line); padding: 9px 0; font-size: .875rem; }
-.loc-details dd { text-align: right; margin: 0; font-family: ui-monospace,monospace; }
-#loc-chart svg { width: 100%; height: auto; margin: 8px 0; }
-.loc-chart-legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: .8125rem; margin-bottom: 12px; }
-.loc-chart-legend span:first-child { color: #217761; }
-.loc-chart-legend span:last-child { color: #84649e; }
-.loc-fix-box { border-top: 1px solid var(--line); margin-top: 22px; padding-top: 18px; font-size: .875rem; }
-.loc-fix-box p { color: var(--muted); margin-top: 8px; }
-.loc-state { margin-top: 22px; }
-.loc-state .panel-heading { flex-wrap: wrap; }
-#loc-controller { font-size: .875rem; color: var(--teal); }
-#loc-waypoint,#loc-distance { margin-top: 14px; }
-.loc-profile { margin: 32px 0 44px; }
-.loc-cases>p:not(.eyebrow) { font-size: .875rem; color: var(--muted); margin-top: 12px; }
-.loc-cases .exercise-grid { grid-template-columns: repeat(3,minmax(0,1fr)); margin-top: 25px; }
-.loc-equation { font-size: 1rem; line-height: 1.9; }
-#loc-comparisons>h3 { margin: 24px 0 14px; }
-@media(max-width:1050px) { .loc-lab { grid-template-columns: minmax(0,1fr) 300px; } .loc-config { padding: 20px; } .loc-inspection { grid-template-columns: 1fr; } }
-@media(max-width:850px) { .loc-lab { grid-template-columns: 1fr; } #loc-viewport { flex: auto; height: 480px; } .loc-cases .exercise-grid { grid-template-columns: 1fr; } }
-@media(max-width:580px) { .loc-intro h1 { font-size: 2rem; } .loc-intro h1 br { display: block; } #loc-viewport { height: 325px; min-height: 325px; } .loc-filter,.loc-evidence,.loc-state { padding: 16px; } .loc-legend { padding: 8px 15px 0; font-size: .75rem; } .loc-equation { font-size: .875rem; padding: 14px; } }
-@media(max-width:580px) { .loc-labels span { font-size: .6875rem; } }
+/* Workshop 06 extends the shared Science studio reading layout. */
+.lesson-page .loc-example { display: grid; grid-template-columns: minmax(0, 1fr) 220px; align-items: center; gap: 24px 50px; max-width: 960px; margin: 45px auto 0 !important; text-align: left; }
+.lesson-page .loc-example-map { display: block; width: 100%; max-width: 520px; height: auto; margin-inline: auto; }
+.lesson-page .loc-example-counts { display: grid; gap: 32px; }
+.lesson-page .loc-example-counts dt { color: var(--muted); font-size: 12px; }
+.lesson-page .loc-example-counts dd { margin: 8px 0 0; color: var(--blue); font: 29px/1.4 var(--mono); }
+.lesson-page .loc-example-counts dd small { font-size: 14px; }
+.lesson-page .loc-example-counts div:last-child dd { color: #856348; }
+.lesson-page .loc-example figcaption { grid-column: 1 / -1; color: var(--muted); text-align: center; font: 10px/1.8 var(--mono); }
+.lesson-page .loc-intro .model-boundary { max-width: 85ch; margin-inline: auto; }
+.lesson-page .loc-preparation { margin-top: 15px; color: var(--muted); font-size: 12px; }
+.lesson-page .loc-preparation a { display: inline-block; padding-block: 4px; }
+.lesson-page .loc-prediction > div > p { max-width: 48ch; color: var(--muted); font-size: 14px; }
+.lesson-page .loc-prediction a { display: inline-flex; align-items: center; gap: 30px; min-height: 44px; margin-top: 16px; border-bottom: 1px solid var(--line); font-size: 13px; text-decoration: none; }
+.lesson-page .loc-prediction a:hover { border-color: var(--blue); }
+.lesson-page .loc-lab { grid-template-columns: minmax(0, 1fr) 340px; align-items: stretch; }
+.lesson-page .loc-lab .mission-visual { display: flex; flex-direction: column; }
+.lesson-page .loc-lab .mission-toolbar { min-height: 77px; }
+.lesson-page #loc-viewport { position: relative; width: 100%; min-width: 0; height: 500px; min-height: 460px; flex: 1; }
+.lesson-page .loc-legend { display: flex; flex-wrap: wrap; gap: 9px 22px; padding: 16px 24px 0; color: var(--muted); font-size: 11px; }
+.lesson-page .loc-legend span:first-child { color: var(--blue); }
+.lesson-page .loc-legend span:nth-child(2) { color: #856348; }
+.lesson-page .loc-lab .mission-map-hint { padding: 15px 24px 20px; color: var(--muted); font-size: 11px; line-height: 1.8; }
+.loc-page .lesson-page .transport { border-bottom: 0; }
+.loc-page .lesson-page .transport button { font-size: 12px; }
+.loc-page .lesson-page .speed-control select { max-width: 150px; font-size: 12px; }
+.lesson-page .loc-config > label { display: block; margin-bottom: 9px; font-size: 13px; }
+.lesson-page .loc-config > select { margin-bottom: 22px; }
+.lesson-page .loc-config > p { color: #586970; font-size: 12px; line-height: 1.8; }
+.lesson-page #loc-description { margin: -8px 0 24px; }
+.lesson-page .loc-config .loc-checkbox { display: flex; align-items: center; gap: 10px; margin-block: 1px 12px; min-height: 36px; }
+.lesson-page #loc-bias { width: 16px; height: 16px; min-height: 16px; padding: 0; margin: 0; accent-color: var(--blue); flex-shrink: 0; }
+.lesson-page #loc-seed-form { margin-block: 23px; font-size: 12px; }
+.lesson-page #loc-seed-form > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin-top: 10px; }
+.lesson-page #loc-seed { min-width: 0; width: 100%; font: 12px/1.6 var(--mono); }
+.lesson-page #loc-seed-form button { padding-inline: 10px; white-space: nowrap; font-size: 12px; }
+.lesson-page .loc-error { margin-top: 10px; color: #8b453a; font-size: 12px; }
+.lesson-page .loc-error:empty { display: none; }
+.lesson-page .loc-advance { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 26px 0 12px; }
+.lesson-page .loc-advance button { padding-inline: 6px; font-size: 11px; }
+.lesson-page .loc-config .wide { font-size: 12px; }
+.loc-page .lesson-page .mission-metrics { padding: 30px 0; gap: 25px 40px; }
+.loc-page .lesson-page .mission-metrics > div > span { color: var(--muted); font-size: 12px; }
+.loc-page .lesson-page .mission-metrics strong { margin-top: 10px; font-size: 23px; }
+.loc-page .lesson-page .mission-small { color: var(--muted); font-size: 12px; line-height: 1.8; }
+.loc-page .lesson-page .mission-outcome { padding: 18px 24px; border-left: 2px solid var(--blue); background: #e9eff1; color: #35525e; font-size: 14px; line-height: 1.8; }
+.loc-page .lesson-page .mission-outcome:is([data-status='false-arrival'], [data-status='collision'], [data-status='budget']) { background: #efebe5; border-color: #9b7659; color: #70513c; }
+.lesson-page .loc-inspection { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 60px; }
+.lesson-page :is(.loc-filter, .loc-evidence, .loc-state) { min-width: 0; padding-top: 28px; border-top: 1px solid var(--line); }
+.lesson-page .loc-filter .panel-heading { flex-wrap: wrap; align-items: flex-start; gap: 16px 24px; }
+.lesson-page .loc-filter .panel-heading h3, .lesson-page .loc-evidence h3 { margin-top: 12px; }
+.lesson-page #loc-axis { font-size: 12px; }
+.lesson-page #loc-update-kind { margin: 26px 0; font-size: 14px; }
+.lesson-page .loc-details { margin: 22px 0 25px; }
+.lesson-page .loc-details > div { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.lesson-page .loc-details dt { color: var(--muted); }
+.lesson-page .loc-details dd { text-align: right; margin: 0; font: 12px/1.8 var(--mono); overflow-wrap: anywhere; }
+.lesson-page #loc-chart { margin: 30px 0 20px; }
+.lesson-page #loc-chart svg { display: block; width: 100%; height: auto; color: var(--muted); font: 11px var(--mono); }
+.lesson-page #loc-chart svg text { fill: currentColor; }
+.lesson-page .loc-chart-legend { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-bottom: 22px; font-size: 11px; }
+.lesson-page .loc-chart-legend span:first-child { color: var(--blue); }
+.lesson-page .loc-chart-legend span:last-child { color: #856348; }
+.lesson-page .loc-fix-box { margin-top: 32px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 13px; }
+.lesson-page .loc-fix-box strong { color: var(--ink); }
+.lesson-page .loc-fix-box p { color: var(--muted); margin-top: 16px; font-size: 12px; line-height: 1.8; }
+.lesson-page .loc-state { margin-top: 46px; }
+.lesson-page .loc-state .panel-heading { flex-wrap: wrap; align-items: flex-start; gap: 18px 28px; }
+.lesson-page #loc-controller { color: var(--blue); font-size: 12px; }
+.lesson-page .loc-state table { min-width: 570px; }
+.loc-page .lesson-page th, .loc-page .lesson-page td { padding-block: 14px; }
+.loc-page .lesson-page caption { padding-top: 18px; caption-side: bottom; text-align: left; white-space: normal; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.lesson-page #loc-waypoint, .lesson-page #loc-distance { margin-top: 20px; }
+.lesson-page #loc-comparisons table { min-width: 870px; }
+.lesson-page #loc-comparisons > h3 { margin-top: 34px; }
+.lesson-page .loc-worked-update { display: grid; gap: 18px; margin-top: 25px; }
+.lesson-page .loc-worked-update > div { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
+.lesson-page .loc-worked-update dt { color: var(--muted); font-size: 13px; }
+.lesson-page .loc-worked-update dd { margin: 0; color: var(--blue); font: 23px/1.4 var(--mono); white-space: nowrap; }
+.lesson-page .loc-worked-update dd small { font-size: 12px; }
+.lesson-page .loc-worked-update > div:last-child dd { color: #856348; }
+.lesson-page .loc-equation { display: grid; grid-template-columns: 1fr 1fr; gap: 35px; text-align: left; font-size: 17px; }
+.lesson-page .loc-equation .eyebrow { margin-bottom: 18px; }
+.lesson-page .loc-equation p + p { margin-top: 12px; }
+.lesson-page .loc-next p:last-child { max-width: 55ch; }
+@media (max-width: 1100px) {
+  .lesson-page .loc-lab { grid-template-columns: minmax(0, 1fr) 300px; }
+  .loc-page .lesson-page .mission-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 25px; }
+  .loc-page .lesson-page .mission-metrics strong { font-size: 21px; }
+  .lesson-page .loc-inspection { grid-template-columns: 1fr; gap: 44px; }
+  .lesson-page .loc-lab :is(.loc-legend, .mission-map-hint) { padding-inline: 18px; }
+}
+@media (max-width: 820px) {
+  .lesson-page .loc-lab { grid-template-columns: minmax(0, 1fr); }
+  .lesson-page #loc-viewport { flex: auto; }
+  .lesson-page .loc-example { grid-template-columns: minmax(0, 1fr) 175px; gap: 22px; }
+  .lesson-page .loc-example-counts dd { font-size: 26px; }
+  .lesson-page .loc-worked-update > div { flex-wrap: wrap; gap: 5px 20px; }
+}
+@media (max-width: 600px) {
+  .lesson-page .loc-example { grid-template-columns: 1fr; margin-top: 36px !important; gap: 28px; }
+  .lesson-page .loc-example-counts { grid-template-columns: 1fr 1fr; gap: 22px; text-align: center; }
+  .lesson-page .loc-example-counts dt { min-height: 3.3em; font-size: 11px; }
+  .lesson-page .loc-example-counts dd { font-size: 24px; }
+  .lesson-page #loc-viewport { height: 420px; min-height: 420px; }
+  .lesson-page .loc-lab :is(.loc-legend, .mission-map-hint) { padding-inline: 15px; }
+  .loc-page .lesson-page .mission-metrics { grid-template-columns: 1fr 1fr; gap: 28px 20px; }
+  .loc-page .lesson-page .mission-outcome { padding: 16px 18px; font-size: 13px; }
+  .lesson-page .loc-details > div { gap: 12px; }
+  .lesson-page .loc-equation { grid-template-columns: 1fr; font-size: 16px; }
+}

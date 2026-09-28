@@ -99,7 +99,7 @@ experiment or rewinds a recording.
 `src/site/shell.css` styles the common navigation. `src/site/site.css` styles the
 home and common editorial elements; `src/site/catalog.css` adds the catalog's
 layout. Pearl surfaces, graphite text and steel-blue accents frame discovery.
-Workshops 01–05 share `src/lesson.css`: a worked example, experiment,
+Workshops 01–06 share `src/lesson.css`: a worked example, experiment,
 illustrated questions and optional technical explanations. Their renderers and
 workshop-specific styles remain separate. The stylesheet is linked from HTML
 so reading does not depend on the experiment's JavaScript. Native disclosures
@@ -114,6 +114,10 @@ Workshop 05 uses `src/pathfinding.css` and an independently scoped light grid
 renderer. Its planned route, search history and physical trail remain distinct;
 reading explanations or changing the displayed search snapshot leaves motion
 unchanged.
+Workshop 06 uses `src/localization.css` and its own light renderer. Solid truth
+and a hollow or wireframe estimate distinguish physical position from the
+controller's information. Its worked example, sensor inspector and optional
+filter equations preserve the active run and seed-application behavior.
 Fonts are served locally with their [license notices](../public/fonts/README.md).
 The home page has a static illustration and direct thematic links when its
 canvas cannot run. It has no automatic animation or background simulation.

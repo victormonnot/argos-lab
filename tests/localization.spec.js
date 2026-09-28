@@ -8,6 +8,24 @@ const snapshot = async (page) => ({
   fixes: await page.locator('#loc-fix-counts').textContent(),
   waypoint: await page.locator('#loc-waypoint').textContent(),
 });
+const readingSnapshot = async (page) => ({
+  ...await snapshot(page),
+  estimator: await page.locator('#loc-estimator').inputValue(),
+  schedule: await page.locator('#loc-schedule').inputValue(),
+  map: await page.locator('#loc-map').inputValue(),
+  axis: await page.locator('#loc-axis').inputValue(),
+  bias: await page.locator('#loc-bias').isChecked(),
+  seedDraft: await page.locator('#loc-seed').inputValue(),
+  appliedSettings: await page.locator('#loc-distance').textContent(),
+  seedError: await page.locator('#loc-seed-error').textContent(),
+  lastFix: await page.locator('#loc-last-fix').textContent(),
+  fixMarker: await page.locator('[data-loc-fix]').evaluateAll((items) => items.map((item) => [item.dataset.locFix, item.dataset.stale])),
+  geometry: await page.locator('[data-loc-route], [data-loc-trail], [data-loc-uncertainty], [data-loc-truth], [data-loc-estimate]').evaluateAll((items) => items.map((item) => item.outerHTML)),
+  measurements: await page.locator('#loc-error, #loc-actual-goal, #loc-estimated-goal, #loc-time, #loc-controller, #loc-update-kind, #loc-fix-stream').allTextContents(),
+  chart: await page.locator('#loc-chart').innerHTML(),
+  status: await page.locator('#loc-status').textContent(),
+  outcome: await page.locator('#loc-outcome').textContent(),
+});
 async function freezeClock(page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
@@ -22,7 +40,7 @@ test.beforeEach(async ({ page }) => {
 test.afterEach(async ({ page }) => expect(browserErrors.get(page)).toEqual([]));
 
 test('prediction and a fresh fix expose distinct observable Kalman updates', async ({ page }) => {
-  await expect(page.locator('h1')).toHaveText('Linear Kalman filtering. Estimate, then correct.');
+  await expect(page.locator('h1')).toHaveText('Position estimation.');
   await expect(page.locator('#loc-update-kind')).toContainText('Exact initial position');
   await expect(page.locator('#loc-error')).toHaveText('0.000 m');
   await page.locator('#loc-step').click();
@@ -151,4 +169,121 @@ test('keyboard, mobile navigation and unavailable WebGL keep the experiment usab
   await page.locator('#loc-2d').click(); await page.locator('#loc-finish').click();
   await expect(page.locator('#loc-status')).toHaveText('Arrival verified');
   await expect(page.locator('#loc-time')).toHaveText('16.9 s');
+});
+
+test('reading disclosures preserves prediction, fresh corrections, the inspected axis and an unapplied seed', async ({ page }) => {
+  await page.locator('#loc-schedule').selectOption('recovery');
+  await page.locator('#loc-axis').selectOption('1');
+  await page.locator('#loc-seed').fill('7');
+
+  for (const phase of [
+    { button: 'loss', step: '30', kind: 'Prediction only', fix: '20', stale: 'true' },
+    { button: 'return', step: '80', kind: 'Predict + correct', fix: '80', stale: 'false' },
+  ]) {
+    await page.locator(`#loc-${phase.button}`).click();
+    await expect(page.locator('#loc-step-count')).toHaveText(phase.step);
+    await expect(page.locator('#loc-update-kind')).toContainText(phase.kind);
+    await expect(page.locator('[data-loc-fix]')).toHaveAttribute('data-loc-fix', phase.fix);
+    await expect(page.locator('[data-loc-fix]')).toHaveAttribute('data-stale', phase.stale);
+    if (phase.stale === 'true') {
+      await expect(page.locator('#loc-update dd').nth(4)).toHaveText('—');
+      await expect(page.locator('#loc-last-fix')).toContainText('historical; not reused');
+    } else {
+      await expect(page.locator('#loc-update dd').nth(4)).not.toHaveText('—');
+      await expect(page.locator('#loc-last-fix')).toContainText('Age: 0.0 s · fresh');
+    }
+    const beforeReading = await readingSnapshot(page);
+    expect(beforeReading.axis).toBe('1');
+    expect(beforeReading.seedDraft).toBe('7');
+    expect(beforeReading.appliedSettings).toContain('Applied noise seed: 1.');
+    expect(beforeReading.status).toBe('Paused');
+
+    for (const id of ['loc-method-details', 'loc-model-details']) {
+      const disclosure = page.locator(`#${id}`);
+      await expect(disclosure).not.toHaveAttribute('open', '');
+      await disclosure.locator(':scope > summary').focus();
+      await page.keyboard.press('Enter');
+      await expect(disclosure).toHaveAttribute('open', '');
+      expect(await readingSnapshot(page)).toEqual(beforeReading);
+      await page.keyboard.press('Space');
+      await expect(disclosure).not.toHaveAttribute('open', '');
+      expect(await readingSnapshot(page)).toEqual(beforeReading);
+    }
+  }
+
+  await page.locator('#loc-step').click();
+  await expect(page.locator('#loc-step-count')).toHaveText('81');
+  await expect(page.locator('#loc-axis')).toHaveValue('1');
+  await expect(page.locator('#loc-seed')).toHaveValue('7');
+  await expect(page.locator('#loc-distance')).toContainText('Applied noise seed: 1.');
+  await expect(page.locator('[data-loc-fix]')).toHaveAttribute('data-stale', 'true');
+});
+
+test('bookmarks reveal comparisons and filter equations without resetting an ongoing estimate', async ({ page }) => {
+  await page.goto('/localization/#loc-seed-table');
+  await expect(page.locator('#loc-comparisons')).toHaveAttribute('open', '');
+  await expect(page.locator('#loc-seed-table')).toBeVisible();
+  await expect(page.locator('#loc-reference-table tr')).toHaveCount(10);
+  await expect(page.locator('#loc-seed-table tr')).toHaveCount(10);
+  await expect(page.locator('#loc-reference-table')).toContainText('False arrival');
+  await expect(page.locator('#loc-seed-table tr').nth(2)).toContainText('15 / 20');
+  await expect(page.locator('#loc-seed-table tr').nth(7)).toContainText('19 / 20');
+
+  await page.locator('#loc-seed').fill('7');
+  await page.locator('#loc-seed-form button').click();
+  await page.locator('#loc-schedule').selectOption('outage');
+  await page.locator('#loc-loss').click();
+  await page.locator('#loc-axis').selectOption('1');
+  await page.locator('#loc-seed').fill('11');
+  const beforeHashChange = await readingSnapshot(page);
+  expect(beforeHashChange.step).toBe('30');
+  expect(beforeHashChange.appliedSettings).toContain('Applied noise seed: 7.');
+  await page.evaluate(() => { window.location.hash = 'loc-equation'; });
+  await expect(page.locator('#loc-model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#loc-equation')).toBeVisible();
+  expect(await readingSnapshot(page)).toEqual(beforeHashChange);
+
+  await page.reload();
+  await expect(page.locator('#loc-model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#loc-equation')).toBeVisible();
+  await expect(page.locator('#loc-step-count')).toHaveText('0');
+  await expect(page.locator('#loc-estimator')).toHaveValue('kalman');
+  await expect(page.locator('#loc-schedule')).toHaveValue('steady');
+  await expect(page.locator('#loc-axis')).toHaveValue('0');
+  await expect(page.locator('#loc-seed')).toHaveValue('1');
+  await expect(page.locator('#loc-fix-counts')).toHaveText('0 fixes received · 0 used for Kalman correction.');
+});
+
+test('the static lesson, filter equations and sources remain readable on mobile without JavaScript', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL, viewport: { width: 390, height: 844 } });
+  try {
+    const page = await context.newPage();
+    const stylesheets = [];
+    page.on('response', (response) => {
+      if (response.request().resourceType() === 'stylesheet' && response.ok()) stylesheets.push(response.url());
+    });
+    await page.goto('/localization/');
+    await expect(page.locator('h1')).toHaveText('Position estimation.');
+    await expect(page.locator('.no-script-note')).toBeVisible();
+    await expect(page.locator('.no-script-note')).toContainText('JavaScript');
+    for (const name of ['lesson', 'localization']) {
+      expect(stylesheets.some((url) => new URL(url).pathname === `/src/${name}.css`)).toBe(true);
+    }
+
+    await expect(page.locator('#loc-method-details > summary')).toContainText('Method & assumptions');
+    await page.locator('#loc-method-details > summary').click();
+    await expect(page.locator('#loc-method-details')).toHaveAttribute('open', '');
+    await expect(page.locator('#loc-method-details')).toContainText('Synthetic position errors');
+    await expect(page.locator('#loc-model-details > summary')).toContainText('Read the filter, assumptions & sources');
+    await page.locator('#loc-model-details > summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#loc-equation')).toBeVisible();
+    await expect(page.locator('#loc-equation')).toContainText('K = P⁻ / (P⁻ + R)');
+    await expect(page.locator('#loc-method .reference a').nth(0)).toHaveAttribute('href', 'https://doi.org/10.1115/1.3662552');
+    await expect(page.locator('#loc-method .reference a').nth(1)).toHaveAttribute('href', 'https://www.cs.yale.edu/homes/hudak-paul/CS474S01/kalman.pdf');
+    await expect(page.locator('#loc-method .reference a').nth(2)).toHaveAttribute('href', 'https://sites.utexas.edu/near/wp-content/uploads/sites/6030/2017/04/CUKF_ver06.pdf');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  } finally {
+    await context.close();
+  }
 });

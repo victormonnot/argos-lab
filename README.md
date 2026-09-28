@@ -326,6 +326,12 @@ oracle**, **dead reckoning** from measured displacement and a **linear Kalman
 filter** for independent x/y coordinates. Odometry has seeded random noise and
 an optional fixed bias; synthetic absolute position fixes arrive once per second.
 
+The opening zoom shows a specific dead-reckoning arrival claim: `0.027 m` from
+the estimated position to the goal, but `1.437 m` from the actual position.
+Four illustrated questions compare position sources, new fixes, the filter's
+bias assumption and missing observations. Technical disclosures preserve the
+active run, inspected coordinate and unapplied seed draft.
+
 1. Compare the oracle with dead reckoning on the U route. With seed 1 and bias
    enabled, dead reckoning announces arrival while the robot is 1.437 m from goal.
 2. Run Kalman with regular fixes. Inspect prediction, innovation, gain and

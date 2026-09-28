@@ -41,6 +41,38 @@ either displayed pose become translucent while their edges and shadows remain.
 This cutaway is recalculated during motion and camera orbiting; it changes no
 occupied cell, sensor input, position or contact decision.
 
+## Reading structure
+
+The opening zoom shows the dead-reckoning U-map run with seed 1, steady fixes
+and fixed bias enabled. At its `16.4 s` stopping boundary, the estimated goal
+distance is `0.027 m`, but actual goal distance is `1.437 m`, outside the
+`0.25 m` physical arrival radius. Dead reckoning ignores the supplied fixes.
+These goal distances differ from the `1.439 m` error between true and estimated
+positions. The diagram uses actual model coordinates at one metre scale on both
+axes. Its settings are explicit; the interactive experiment still starts with
+Kalman filtering and regular fixes.
+
+Four illustrated questions compare the oracle and dead reckoning, explain a
+fresh correction, remove fixed bias and interrupt then restore absolute fixes.
+The six existing case actions restore the stated seed-1 U-map configuration.
+The comparison disclosure exposes ten reference runs and all 200 seeded trials
+without changing the active run. Failures remain visible alongside arrivals.
+
+At the first regular fix, the x-coordinate example shows a prediction of
+`3.5260 m`, reading of `3.4480 m` and corrected estimate of `3.5037 m`.
+The gain is approximately `0.2857`; correction weights the innovation, not
+simulator truth. A separate bias illustration compares both runs at `10.0 s`:
+their assumed coordinate variance is the same, about `0.001158 m²`, while
+realized position errors differ. This is a specific paired example, not a
+guarantee of uncertainty coverage or improvement at every correction.
+
+Native **Method & assumptions** and **Read the filter, assumptions & sources**
+disclosures preserve motion, current readings, coordinate selection and unapplied
+seed drafts. With JavaScript, fragment links reveal targets inside a closed
+disclosure. Static styles keep the worked example, questions and technical text
+readable without JavaScript; execution requires it. The closing link leads to
+the separate shared-target estimation lesson.
+
 ## Shared mission and sensor model
 
 Reuse the open and U maps, start `(3.5,4.5)` m, goal `(10.5,4.5)` m and A* route

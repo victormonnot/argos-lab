@@ -1,6 +1,3 @@
-import './style.css';
-import './mission.css';
-import './localization.css';
 import { ESTIMATORS, FIX_SCHEDULES, LOCAL_MAPS, LOCAL_DT, FIX_LOSS_STEP, FIX_RETURN_STEP, createLocalizationRun, stepLocalization, resetLocalization, finishLocalization, compareLocalization, compareLocalizationSeeds } from './localization-model.js';
 import { createLocalizationView } from './localization-view.js';
 
@@ -58,9 +55,9 @@ for (const mode of ['2d', '3d']) $(`#loc-${mode}`).addEventListener('click', () 
 });
 document.querySelectorAll('[data-loc-case]').forEach((button) => button.addEventListener('click', () => {
   const [estimator, schedule] = button.dataset.locCase.split(':'); configure({ estimator, schedule, map: 'u', seed: 1, bias: true });
-  $('#loc-experiment').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#loc-experiment').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
 }));
-$('#loc-unbiased').addEventListener('click', () => { configure({ estimator: 'kalman', schedule: 'steady', map: 'u', seed: 1, bias: false }); $('#loc-experiment').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+$('#loc-unbiased').addEventListener('click', () => { configure({ estimator: 'kalman', schedule: 'steady', map: 'u', seed: 1, bias: false }); $('#loc-experiment').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }); });
 $('#loc-comparisons').addEventListener('toggle', () => {
   if (!$('#loc-comparisons').open || $('#loc-reference-table').children.length) return;
   const label = (row) => `${LOCAL_MAPS[row.map]}<br>${ESTIMATORS[row.estimator]}<br>${FIX_SCHEDULES[row.schedule]}`;
@@ -89,12 +86,15 @@ function renderUpdate() {
   $('#loc-update').innerHTML = rows.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('');
 }
 function renderChart() {
+  const width = Math.max(240, Math.round($('#loc-chart').clientWidth));
+  const height = 230, left = 46, right = 20, top = 42, bottom = 36;
   const kalman = run.initial.estimator === 'kalman', end = Math.max(10, Math.ceil(run.step * LOCAL_DT / 10) * 10);
   const scale = (sample) => sample.covariance ? 2 * Math.sqrt(sample.covariance[0] + sample.covariance[1]) : 0;
   const max = Math.max(.5, Math.ceil(Math.max(...run.history.flatMap((sample) => [sample.error, scale(sample)])) * 2) / 2);
-  const X = (time) => 42 + time / end * 350, Y = (value) => 166 - value / max * 135;
+  const X = (time) => left + time / end * (width - left - right);
+  const Y = (value) => height - bottom - value / max * (height - top - bottom);
   const path = (get) => run.history.map((sample, index) => `${index ? 'L' : 'M'}${X(sample.time).toFixed(2)},${Y(get(sample)).toFixed(2)}`).join(' ');
-  $('#loc-chart').innerHTML = `<svg viewBox="0 0 420 205" role="img" aria-label="Actual estimation error and assumed uncertainty scale over time"><text x="42" y="17" font-size="12" fill="#58675c">Position error / assumed scale (m)</text>${[0, max / 2, max].map((value) => `<path d="M42 ${Y(value)}H392" stroke="#e2e5db"/><text x="32" y="${Y(value) + 4}" text-anchor="end" font-size="12" fill="#58675c">${value.toFixed(2)}</text>`).join('')}<path d="${path((sample) => sample.error)}" stroke="#217761" stroke-width="2.5" fill="none"/>${kalman ? `<path d="${path(scale)}" stroke="#9578ad" stroke-width="2" stroke-dasharray="6 4" fill="none"/>` : ''}<text x="42" y="192" font-size="12" fill="#58675c">0 s</text><text x="392" y="192" text-anchor="end" font-size="12" fill="#58675c">${end} s</text></svg>`;
+  $('#loc-chart').innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Actual estimation error and assumed uncertainty scale over time"><text x="${left}" y="17">Error / assumed scale (m)</text>${[0, max / 2, max].map((value) => `<path d="M${left} ${Y(value)}H${width - right}" stroke="#dce3e1"/><text x="${left - 11}" y="${Y(value) + 4}" text-anchor="end">${value.toFixed(2)}</text>`).join('')}<path d="${path((sample) => sample.error)}" stroke="#446e91" stroke-width="2.5" fill="none"/>${kalman ? `<path d="${path(scale)}" stroke="#947658" stroke-width="2" stroke-dasharray="6 4" fill="none"/>` : ''}<text x="${left}" y="${height - 14}">0 s</text><text x="${width - right}" y="${height - 14}" text-anchor="end">${end} s</text></svg>`;
   $('.loc-chart-legend span:last-child').hidden = !kalman;
 }
 function render() {
@@ -126,6 +126,38 @@ function render() {
   $('#loc-distance').textContent = `Physical travel: ${metres(run.distance)}. Applied noise seed: ${run.initial.seed}. Fixed bias: ${run.initial.bias ? 'enabled' : 'disabled'}.`;
   renderUpdate(); renderChart(); view.update(run);
 }
-window.addEventListener('pagehide', () => { stop(); view.dispose(); });
+// Reading explanations and resizing never advance the sensor or motion sequence.
+function revealFragment() {
+  let id;
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+  const target = document.getElementById(id);
+  if (!target) return;
+  let opened = false;
+  for (let ancestor = target; ancestor; ancestor = ancestor.parentElement) {
+    if (ancestor instanceof HTMLDetailsElement && !ancestor.open) {
+      ancestor.open = true;
+      opened = true;
+    }
+  }
+  if (opened) requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+}
+let chartWidth = Math.round($('#loc-chart').clientWidth), chartFrame = null;
+const chartResize = new ResizeObserver(() => {
+  const width = Math.round($('#loc-chart').clientWidth);
+  if (width !== chartWidth) {
+    chartWidth = width;
+    cancelAnimationFrame(chartFrame);
+    chartFrame = requestAnimationFrame(renderChart);
+  }
+});
+chartResize.observe($('#loc-chart'));
+window.addEventListener('hashchange', revealFragment);
+function dispose() {
+  stop(); view.dispose(); chartResize.disconnect(); cancelAnimationFrame(chartFrame);
+  window.removeEventListener('hashchange', revealFragment);
+}
+window.addEventListener('pagehide', dispose);
+if (import.meta.hot) import.meta.hot.dispose(dispose);
 window.addEventListener('pageshow', (event) => { if (event.persisted) window.location.reload(); });
 syncInputs(); render();
+revealFragment();

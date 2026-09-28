@@ -1,8 +1,10 @@
+import './localization-view.css';
+import { LOCAL_DT } from './localization-model.js';
 import { cellCenter, cellXY } from './pathfinding-model.js';
 import { createWorkshopDrone, setWorkshopDrone, createWorkshopStage, addWorkshopCameraUI } from './workshop-scene.js';
 
 const NS = 'http://www.w3.org/2000/svg';
-const COLORS = { floor: '#19372f', wall: '#526762', truth: '#72dabb', estimate: '#b5acff', goal: '#f1c17d', fix: '#b7d7ff', route: '#9cafa5', uncertainty: '#988bdd' };
+const COLORS = { floor: '#f7f9f5', wall: '#c2cac6', truth: '#446e91', estimate: '#947658', goal: '#526369', fix: '#617e8c', route: '#94a19c', uncertainty: '#947658' };
 const DISPLAY_HEIGHT = .8, WALL_HEIGHT = 1.65;
 
 function element(name, attributes = {}, text) {
@@ -23,58 +25,96 @@ function releaseGroup(group) {
   group.clear();
 }
 
+
+// Separate labels describe nearby markers without displacing their positions.
+// The same allocator works in SVG units and CSS pixels for the 3D overlay.
+function placeLabels(items, width, top, bottom, unit = 1, minX = 8 * unit) {
+  const occupied = items.map(({ x, y }) => ({ x: x - 8 * unit, y: y - 8 * unit, w: 16 * unit, h: 16 * unit }));
+  return items.map((item) => {
+    const w = (item.text.length * 6.7 + 12) * unit, h = 21 * unit, gap = 12 * unit;
+    const left = [-w - gap, -h - gap], right = [gap, -h - gap];
+    const belowLeft = [-w - gap, gap], belowRight = [gap, gap];
+    const offsets = item.kind === 'truth' ? [left, belowLeft, right, belowRight]
+      : item.kind === 'estimate' ? [right, belowRight, left, belowLeft]
+        : item.kind === 'fix' ? [belowLeft, left, belowRight, right] : [belowRight, right, belowLeft, left];
+    offsets.push([-w / 2, -h - gap * 3], [-w / 2, gap * 3], [-w - gap * 3, -h / 2], [gap * 3, -h / 2]);
+    const candidates = offsets.map(([dx, dy]) => ({ x: Math.max(minX, Math.min(width - w - 8 * unit, item.x + dx)), y: Math.max(top, Math.min(bottom - h, item.y + dy)), w, h }));
+    const overlap = (box) => occupied.reduce((sum, other) => sum + Math.max(0, Math.min(box.x + box.w + 3 * unit, other.x + other.w) - Math.max(box.x - 3 * unit, other.x)) * Math.max(0, Math.min(box.y + box.h + 3 * unit, other.y + other.h) - Math.max(box.y - 3 * unit, other.y)), 0);
+    const box = candidates.reduce((best, candidate) => overlap(candidate) < overlap(best) ? candidate : best);
+    occupied.push(box);
+    return { item, box };
+  });
+}
+
 /** Observe one supplied run. T is evaluator truth, E is the estimate and Z is
  * the latest absolute reading, which may be old. Rendering and camera controls
  * never advance the estimator or controller. Model y maps to negative 3D z;
  * wall height and marker height are decorative, not vertical dynamics. */
 export function createLocalizationView(container) {
   let run, mode = '2d', world, loading = false, failed = false, disposed = false, following = false;
-  const svg = element('svg', { viewBox: '0 0 760 600', class: 'loc-svg', role: 'img', 'aria-label': 'Localization map: solid T is physical truth, hollow E is the position estimate, G is the goal, and cross Z is the latest absolute reading. The ellipse has two-standard-deviation axes from the filter covariance. Positive y is upward.' });
+  const svg = element('svg', { viewBox: '0 0 760 650', class: 'loc-svg', role: 'img', 'aria-label': 'Localization map: solid T is physical truth, hollow E is the position estimate, G is the goal, and cross Z is the latest absolute reading. The ellipse has two-standard-deviation axes from the filter covariance. Positive y is upward.' });
   const layer = document.createElement('div'); layer.className = 'loc-three'; layer.hidden = true;
   container.append(svg, layer);
   const routePoints = () => run.plan.path.map((id) => cellCenter(id, run.grid.width));
+  const fixAge = () => ((run.step - run.lastFix.step) * LOCAL_DT).toFixed(1);
+  const fixLabel = () => run.lastFix.step === run.step ? 'Z' : `Z · ${fixAge()}s old`;
 
   function drawSvg() {
     if (!run || disposed) return;
     const { width, height } = run.grid, size = Math.min(660 / width, 495 / height);
+    // Route coordinates stay fixed; only display annotations use screen pixels.
+    const scale = Math.min(Math.max(1, container.clientWidth) / 760, Math.max(1, container.clientHeight) / 650);
+    const px = (value) => value / scale;
     const left = (760 - size * width) / 2, top = (555 - size * height) / 2;
     const X = (x) => left + x * size, Y = (y) => top + (height - y) * size;
     const blocked = new Set(run.grid.blocked);
     svg.replaceChildren();
     for (let id = 0; id < width * height; id += 1) {
       const [x, y] = cellXY(id, width), wall = blocked.has(id);
-      svg.append(element('rect', { x: X(x), y: Y(y + 1), width: size, height: size, fill: wall ? COLORS.wall : COLORS.floor, stroke: '#426055', 'stroke-width': .8 }));
-      if (wall) svg.append(element('path', { d: `M${X(x + .23)},${Y(y + .23)}L${X(x + .77)},${Y(y + .77)}M${X(x + .23)},${Y(y + .77)}L${X(x + .77)},${Y(y + .23)}`, stroke: '#81928a', 'stroke-width': 1.2 }));
+      svg.append(element('rect', { x: X(x), y: Y(y + 1), width: size, height: size, fill: wall ? COLORS.wall : COLORS.floor, stroke: '#cdd7d2', 'stroke-width': px(.7) }));
+      if (wall) svg.append(element('path', { d: `M${X(x + .23)},${Y(y + .23)}L${X(x + .77)},${Y(y + .77)}M${X(x + .23)},${Y(y + .77)}L${X(x + .77)},${Y(y + .23)}`, stroke: '#7b8888', 'stroke-width': px(.8) }));
     }
     const route = routePoints();
-    if (route.length > 1) svg.append(element('polyline', { 'data-loc-route': '', points: route.map(([x, y]) => `${X(x)},${Y(y)}`).join(' '), fill: 'none', stroke: COLORS.route, 'stroke-width': 2.2, 'stroke-dasharray': '7 5', 'stroke-linejoin': 'round' }));
+    if (route.length > 1) svg.append(element('polyline', { 'data-loc-route': '', points: route.map(([x, y]) => `${X(x)},${Y(y)}`).join(' '), fill: 'none', stroke: COLORS.route, 'stroke-width': px(1.1), 'stroke-dasharray': `${px(5)} ${px(4)}`, 'stroke-linejoin': 'round' }));
     if (run.history.length > 1) {
-      for (const [key, color, dash] of [['position', COLORS.truth, 'none'], ['estimate', COLORS.estimate, '4 3']]) {
-        svg.append(element('polyline', { 'data-loc-trail': key, points: run.history.map((sample) => `${X(sample[key][0])},${Y(sample[key][1])}`).join(' '), fill: 'none', stroke: color, 'stroke-width': 2.6, 'stroke-dasharray': dash, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+      for (const [key, color, dash] of [['position', COLORS.truth, 'none'], ['estimate', COLORS.estimate, `${px(4)} ${px(3)}`]]) {
+        svg.append(element('polyline', { 'data-loc-trail': key, points: run.history.map((sample) => `${X(sample[key][0])},${Y(sample[key][1])}`).join(' '), fill: 'none', stroke: color, 'stroke-width': px(1.8), 'stroke-dasharray': dash, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
       }
     }
     const [gx, gy] = cellCenter(run.grid.goal, width).map((value, axis) => axis === 0 ? X(value) : Y(value));
-    svg.append(element('path', { d: `M${gx},${gy - 11}L${gx + 11},${gy}L${gx},${gy + 11}L${gx - 11},${gy}Z`, fill: COLORS.floor, stroke: COLORS.goal, 'stroke-width': 2 }));
-    svg.append(element('text', { x: gx + 14, y: gy + 24, fill: COLORS.goal, 'font-size': 16, 'font-weight': 600 }, 'G'));
+    const goalRadius = px(6);
+    svg.append(element('path', { d: `M${gx},${gy - goalRadius}L${gx + goalRadius},${gy}L${gx},${gy + goalRadius}L${gx - goalRadius},${gy}Z`, fill: COLORS.floor, stroke: COLORS.goal, 'stroke-width': px(1.4) }));
     const waypoint = run.plan.waypoints[run.waypointIndex];
-    if (waypoint) svg.append(element('circle', { 'data-loc-waypoint': run.waypointIndex, cx: X(waypoint[0]), cy: Y(waypoint[1]), r: 4, fill: 'none', stroke: '#ffffff', 'stroke-width': 1.5 }));
+    if (waypoint) svg.append(element('circle', { 'data-loc-waypoint': run.waypointIndex, cx: X(waypoint[0]), cy: Y(waypoint[1]), r: px(3.3), fill: '#fbfcfa', stroke: '#526369', 'stroke-width': px(1.1) }));
     const tx = X(run.position[0]), ty = Y(run.position[1]), ex = X(run.estimate[0]), ey = Y(run.estimate[1]);
-    if (run.covariance) svg.append(element('ellipse', { 'data-loc-uncertainty': '', cx: ex, cy: ey, rx: 2 * Math.sqrt(run.covariance[0]) * size, ry: 2 * Math.sqrt(run.covariance[1]) * size, fill: COLORS.uncertainty, 'fill-opacity': .09, stroke: COLORS.uncertainty, 'stroke-width': 1.5, 'stroke-dasharray': '3 3' }));
-    svg.append(element('line', { 'data-loc-error': '', x1: tx, y1: ty, x2: ex, y2: ey, stroke: COLORS.estimate, 'stroke-width': 1, 'stroke-dasharray': '2 3' }));
+    if (run.covariance) svg.append(element('ellipse', { 'data-loc-uncertainty': '', cx: ex, cy: ey, rx: 2 * Math.sqrt(run.covariance[0]) * size, ry: 2 * Math.sqrt(run.covariance[1]) * size, fill: COLORS.uncertainty, 'fill-opacity': .09, stroke: COLORS.uncertainty, 'stroke-width': px(1.1), 'stroke-dasharray': `${px(3)} ${px(3)}` }));
+    svg.append(element('line', { 'data-loc-error': '', x1: tx, y1: ty, x2: ex, y2: ey, stroke: COLORS.estimate, 'stroke-width': px(.9), 'stroke-dasharray': `${px(2)} ${px(3)}` }));
+    const annotations = [
+      { kind: 'truth', text: 'T', x: tx, y: ty, color: COLORS.truth },
+      { kind: 'estimate', text: 'E', x: ex, y: ey, color: COLORS.estimate },
+      { kind: 'goal', text: 'G', x: gx, y: gy, color: COLORS.goal },
+    ];
     if (run.lastFix) {
       const fx = X(run.lastFix.position[0]), fy = Y(run.lastFix.position[1]), stale = run.lastFix.step !== run.step;
       const fix = element('g', { 'data-loc-fix': run.lastFix.step, 'data-stale': String(stale), opacity: stale ? .6 : 1 });
-      fix.append(element('path', { d: `M${fx - 7},${fy}H${fx + 7}M${fx},${fy - 7}V${fy + 7}`, fill: 'none', stroke: COLORS.fix, 'stroke-width': 2 }));
-      fix.append(element('text', { x: fx - 13, y: fy + 23, fill: COLORS.fix, 'font-size': 16, 'font-weight': 600, 'text-anchor': 'end' }, 'Z'));
+      const radius = px(5);
+      fix.append(element('path', { d: `M${fx - radius},${fy}H${fx + radius}M${fx},${fy - radius}V${fy + radius}`, fill: 'none', stroke: COLORS.fix, 'stroke-width': px(1.4) }));
+      fix.append(element('title', {}, `Absolute fix sampled at ${(run.lastFix.step * LOCAL_DT).toFixed(1)} s; age ${fixAge()} s${stale ? '; historical, not a new measurement' : '; fresh measurement'}.`));
+      annotations.push({ kind: 'fix', text: fixLabel(), x: fx, y: fy, color: COLORS.fix });
       svg.append(fix);
     }
-    svg.append(element('circle', { 'data-loc-truth': '', 'data-x': run.position[0], 'data-y': run.position[1], cx: tx, cy: ty, r: 6, fill: COLORS.truth, stroke: '#102b23', 'stroke-width': 1.5 }));
-    svg.append(element('circle', { 'data-loc-estimate': '', 'data-x': run.estimate[0], 'data-y': run.estimate[1], cx: ex, cy: ey, r: 10, fill: 'none', stroke: COLORS.estimate, 'stroke-width': 2.4 }));
-    svg.append(element('text', { x: tx - 13, y: ty - 13, fill: COLORS.truth, 'font-size': 16, 'font-weight': 600, 'text-anchor': 'end' }, 'T'));
-    svg.append(element('text', { x: ex + 13, y: ey - 13, fill: COLORS.estimate, 'font-size': 16, 'font-weight': 600 }, 'E'));
-    for (let x = 0; x < width; x += 1) svg.append(element('text', { x: X(x + .5), y: Y(0) + 22, fill: '#a7beb1', 'font-size': 13, 'text-anchor': 'middle' }, x));
-    for (let y = 0; y < height; y += 1) svg.append(element('text', { x: left - 14, y: Y(y + .5) + 5, fill: '#a7beb1', 'font-size': 13, 'text-anchor': 'end' }, y));
-    svg.append(element('text', { x: 380, y: 590, fill: '#a7beb1', 'font-size': 13, 'text-anchor': 'middle' }, 'Cell coordinates · 1 m spacing · y increases upward'));
+    svg.append(element('circle', { 'data-loc-truth': '', 'data-x': run.position[0], 'data-y': run.position[1], cx: tx, cy: ty, r: px(4.5), fill: COLORS.truth, stroke: '#fbfcfa', 'stroke-width': px(1.2) }));
+    svg.append(element('circle', { 'data-loc-estimate': '', 'data-x': run.estimate[0], 'data-y': run.estimate[1], cx: ex, cy: ey, r: px(7), fill: 'none', stroke: COLORS.estimate, 'stroke-width': px(1.6) }));
+    for (const { item, box } of placeLabels(annotations, 760, 0, 540, 1 / scale, left + px(3))) {
+      const annotation = element('g', { 'data-loc-label': item.kind, 'aria-hidden': 'true' });
+      annotation.append(element('line', { x1: item.x, y1: item.y, x2: Math.max(box.x, Math.min(box.x + box.w, item.x)), y2: Math.max(box.y, Math.min(box.y + box.h, item.y)), stroke: item.color, 'stroke-width': px(.7) }));
+      annotation.append(element('rect', { x: box.x, y: box.y, width: box.w, height: box.h, rx: px(2), fill: '#fbfcfa', stroke: '#dbe1dd', 'stroke-width': px(.7) }));
+      annotation.append(element('text', { x: box.x + px(5), y: box.y + px(14), fill: item.color, 'font-size': px(11), 'font-weight': 500 }, item.text));
+      svg.append(annotation);
+    }
+    for (let x = 0; x < width; x += 1) svg.append(element('text', { x: X(x + .5), y: Y(0) + px(17), fill: '#617077', 'font-size': px(10), 'text-anchor': 'middle' }, x));
+    for (let y = 0; y < height; y += 1) svg.append(element('text', { x: left - px(10), y: Y(y + .5) + px(3.5), fill: '#617077', 'font-size': px(10), 'text-anchor': 'end' }, y));
+    svg.append(element('text', { x: 380, y: Y(0) + px(38), fill: '#617077', 'font-size': px(10), 'text-anchor': 'middle' }, '1 m cells · y increases upward'));
   }
 
   function disposeWorld() {
@@ -104,18 +144,24 @@ export function createLocalizationView(container) {
       controls = new OrbitControls(camera, renderer.domElement);
       controls.minDistance = 2; controls.maxDistance = 52; controls.maxPolarAngle = Math.PI / 2 - .12;
       controls.listenToKeyEvents(renderer.domElement);
-      createWorkshopStage(THREE, scene, renderer, { center: [run.grid.width / 2, -run.grid.height / 2], size: [run.grid.width, run.grid.height], grid: 1 });
+      createWorkshopStage(THREE, scene, renderer, {
+        center: [run.grid.width / 2, -run.grid.height / 2], size: [run.grid.width, run.grid.height], grid: 1,
+        palette: {
+          floor: '#e2e6e0', edge: '#a2ada7', trim: '#c6cec7', metal: '#8a999c', grid: '#617780',
+          lamp: '#e3ebed', lampEmissive: '#94acb8', sky: '#f4f6f4', ground: '#8b9189', sun: '#fff6e9',
+        },
+      });
       const grid = new THREE.Group(), paths = new THREE.Group(); scene.add(grid, paths);
       const truth = createWorkshopDrone(THREE, { color: COLORS.truth, size: .65, id: 'T' }); scene.add(truth);
       const estimate = createWorkshopDrone(THREE, { color: COLORS.estimate, size: .76, ghost: true, id: 'E' }); scene.add(estimate);
       const projections = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 4 }, () => new THREE.Vector3())),
-        new THREE.LineDashedMaterial({ color: '#cfdfd1', dashSize: .05, gapSize: .045, transparent: true, opacity: .5 }));
+        new THREE.LineDashedMaterial({ color: '#617077', dashSize: .05, gapSize: .045, transparent: true, opacity: .5 }));
       projections.frustumCulled = false; scene.add(projections);
       const ring = (inner, outer, color) => {
         const result = new THREE.Mesh(new THREE.RingGeometry(inner, outer, 40), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }));
         result.rotation.x = -Math.PI / 2; scene.add(result); return result;
       };
-      const estimateFootprint = ring(.17, .215, COLORS.estimate), goal = ring(.21, .25, COLORS.goal), waypoint = ring(.055, .08, '#ffffff');
+      const estimateFootprint = ring(.17, .215, COLORS.estimate), goal = ring(.21, .25, COLORS.goal), waypoint = ring(.055, .08, '#526369');
       const unitCircle = Array.from({ length: 64 }, (_, index) => {
         const angle = index * Math.PI * 2 / 64; return new THREE.Vector3(Math.cos(angle), 0, -Math.sin(angle));
       });
@@ -129,12 +175,18 @@ export function createLocalizationView(container) {
         const span = document.createElement('span'); span.textContent = text; span.style.color = color; span.className = className; overlay.append(span); return span;
       };
       const labels = { truth: label('T', COLORS.truth, 'loc-truth-label'), estimate: label('E', COLORS.estimate, 'loc-estimate-label'), goal: label('G', COLORS.goal, 'loc-goal-label'), fix: label('Z', COLORS.fix, 'loc-fix-label') };
+      const leaderLayer = element('svg', { class: 'loc-label-leaders', 'aria-hidden': 'true' });
+      const leaders = Object.fromEntries(Object.entries(labels).map(([kind, label]) => {
+        const line = element('line', { stroke: label.style.color, 'stroke-width': .7 });
+        leaderLayer.append(line); return [kind, line];
+      }));
+      overlay.prepend(leaderLayer);
       layer.replaceChildren(renderer.domElement, overlay);
       const cameraUI = addWorkshopCameraUI(layer, { prefix: 'loc',
-        caption: 'SOLID: TRUTH · WIREFRAME: ESTIMATE · HEIGHT 0.8 m · OCCLUDING WALLS FADE; CONTACT UNCHANGED',
+        caption: 'Solid T: truth · wireframe E: estimate · 0.8 m display height · occluding walls fade',
         onWhole: () => frameCamera(false), onFollow: () => frameCamera(true) });
       cameraUI.setFollowLabel('Follow truth');
-      world = { THREE, renderer, scene, camera, controls, cameraUI, grid, paths, truth, estimate, estimateFootprint, projections, goal, waypoint, uncertainty, fix, error, labels, walls: [], gridKey: null, history: null, plan: null };
+      world = { THREE, renderer, scene, camera, controls, cameraUI, grid, paths, truth, estimate, estimateFootprint, projections, goal, waypoint, uncertainty, fix, error, labels, leaderLayer, leaders, walls: [], gridKey: null, history: null, plan: null };
       controls.addEventListener('change', drawThree);
       updateThree(); resize();
     } catch {
@@ -159,7 +211,7 @@ export function createLocalizationView(container) {
       if (!wall) mesh.rotation.x = -Math.PI / 2;
       mesh.position.set(x, wall ? WALL_HEIGHT / 2 : .016, -y); mesh.castShadow = wall; mesh.receiveShadow = true; world.grid.add(mesh);
       if (wall) {
-        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(wallGeometry), new THREE.LineBasicMaterial({ color: '#9aa996', transparent: true, opacity: .5 }));
+        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(wallGeometry), new THREE.LineBasicMaterial({ color: '#788a8d', transparent: true, opacity: .6 }));
         edges.position.copy(mesh.position); world.grid.add(edges);
         // A slightly expanded sightline test covers both illustrative airframes;
         // the wall and the occupied-cell footprint themselves remain unchanged.
@@ -172,7 +224,7 @@ export function createLocalizationView(container) {
     const points = [];
     for (let x = 0; x <= width; x += 1) points.push(new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, 0, -height));
     for (let y = 0; y <= height; y += 1) points.push(new THREE.Vector3(0, 0, -y), new THREE.Vector3(width, 0, -y));
-    world.grid.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: '#48675b' })));
+    world.grid.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: '#b8c6c1' })));
     const destination = cellCenter(goal, width); world.goal.position.set(destination[0], .04, -destination[1]);
     if (world.gridKey === null) frameCamera(false);
     world.gridKey = key; world.history = null; world.plan = null;
@@ -186,7 +238,7 @@ export function createLocalizationView(container) {
     const heading = Math.atan2(direction[1], direction[0]), phase = run.step * .1;
     setWorkshopDrone(world.truth, { position: [run.position[0], DISPLAY_HEIGHT, -run.position[1]], heading, phase, active: run.status === 'following' });
     setWorkshopDrone(world.estimate, { position: [run.estimate[0], DISPLAY_HEIGHT, -run.estimate[1]], heading, phase, active: run.status === 'following' });
-    world.truth.userData.bodyMaterial?.color.set(run.status === 'collision' ? '#f3a291' : COLORS.truth);
+    world.truth.userData.bodyMaterial?.color.set(run.status === 'collision' ? '#a15e50' : COLORS.truth);
     world.estimate.userData.bodyMaterial?.color.set(COLORS.estimate);
     world.estimateFootprint.position.set(run.estimate[0], .06, -run.estimate[1]);
     const projections = world.projections.geometry.attributes.position;
@@ -208,7 +260,8 @@ export function createLocalizationView(container) {
     if (run.lastFix) {
       world.fix.position.set(run.lastFix.position[0], .11, -run.lastFix.position[1]);
       world.fix.material.opacity = run.lastFix.step === run.step ? 1 : .6;
-      world.labels.fix.style.opacity = String(world.fix.material.opacity);
+      world.labels.fix.textContent = fixLabel();
+      world.labels.fix.title = `Sampled at ${(run.lastFix.step * LOCAL_DT).toFixed(1)} s; age ${fixAge()} s${run.lastFix.step === run.step ? '; fresh measurement' : '; historical, not a new measurement'}.`;
     }
     const errorPositions = world.error.geometry.attributes.position;
     errorPositions.setXYZ(0, run.position[0], DISPLAY_HEIGHT, -run.position[1]);
@@ -242,9 +295,19 @@ export function createLocalizationView(container) {
       world.controls.target.set(run.position[0], DISPLAY_HEIGHT, -run.position[1]);
       world.camera.position.copy(world.controls.target).add(new world.THREE.Vector3(-3.6, 4.1, 1.8).multiplyScalar(fit));
     } else {
-      const span = Math.max(run.grid.width, run.grid.height), fit = Math.max(1, 1.08 / world.camera.aspect);
-      world.controls.target.set(run.grid.width / 2, .4, -run.grid.height / 2);
-      world.camera.position.copy(world.controls.target).add(new world.THREE.Vector3(-span * .65, span * 1.25, span * .65).multiplyScalar(fit));
+      // The west-facing view retains room for camera controls and caption.
+      const direction = new world.THREE.Vector3(-.85, .95, .8).normalize();
+      const right = new world.THREE.Vector3(0, 1, 0).cross(direction).normalize();
+      const up = direction.clone().cross(right).normalize();
+      const tangent = Math.tan(world.camera.fov * Math.PI / 360);
+      const verticalRoom = Math.max(.35, 1 - 144 / Math.max(1, container.clientHeight));
+      world.controls.target.set(run.grid.width / 2, .35, -run.grid.height / 2);
+      let distance = 0;
+      for (const x of [-.6, run.grid.width + .6]) for (const y of [-.4, WALL_HEIGHT]) for (const z of [.6, -run.grid.height - .6]) {
+        const corner = new world.THREE.Vector3(x, y, z).sub(world.controls.target);
+        distance = Math.max(distance, corner.dot(direction) + Math.abs(corner.dot(right)) / (tangent * world.camera.aspect * .88), corner.dot(direction) + Math.abs(corner.dot(up)) / (tangent * verticalRoom));
+      }
+      world.camera.position.copy(world.controls.target).add(direction.multiplyScalar(distance));
     }
     world.controls.update(); drawThree();
   }
@@ -266,18 +329,25 @@ export function createLocalizationView(container) {
     }
     layer.dataset.occludedWalls = String(faded);
     world.renderer.render(world.scene, world.camera);
-    const place = (anchor, label, visible = true) => {
-      const point = anchor.clone().project(world.camera);
-      const x = (point.x + 1) * container.clientWidth / 2, y = (1 - point.y) * container.clientHeight / 2;
-      label.style.left = `${Math.max(32, Math.min(container.clientWidth - 32, x))}px`;
-      label.style.top = `${Math.max(65, Math.min(container.clientHeight - 54, y))}px`;
-      label.hidden = !visible || point.z < -1 || point.z > 1 || Math.abs(point.x) > 1 || Math.abs(point.y) > 1;
-    };
-    place(world.truth.position, world.labels.truth); place(world.estimate.position, world.labels.estimate);
-    place(world.goal.position, world.labels.goal); place(world.fix.position, world.labels.fix, world.fix.visible);
+    const width = container.clientWidth, height = container.clientHeight;
+    const top = 65, bottom = Math.max(top + 40, height - layer.querySelector('.workshop-scene-caption').offsetHeight - 24);
+    const annotations = [];
+    for (const kind of ['truth', 'estimate', 'goal', 'fix']) {
+      const point = world[kind].position.clone().project(world.camera), label = world.labels[kind];
+      label.hidden = (kind === 'fix' && !world.fix.visible) || point.z < -1 || point.z > 1 || Math.abs(point.x) > 1 || Math.abs(point.y) > 1;
+      world.leaders[kind].style.display = label.hidden ? 'none' : '';
+      if (!label.hidden) annotations.push({ kind, text: label.textContent, x: (point.x + 1) * width / 2, y: (1 - point.y) * height / 2 });
+    }
+    for (const { item, box } of placeLabels(annotations, width, top, bottom)) {
+      const label = world.labels[item.kind], line = world.leaders[item.kind];
+      label.style.left = `${box.x}px`; label.style.top = `${box.y}px`;
+      for (const [key, value] of Object.entries({ x1: item.x, y1: item.y, x2: Math.max(box.x, Math.min(box.x + box.w, item.x)), y2: Math.max(box.y, Math.min(box.y + box.h, item.y)) })) line.setAttribute(key, value);
+    }
   }
   function resize() {
-    if (!world || failed || disposed) return;
+    if (disposed) return;
+    drawSvg();
+    if (!world || failed) return;
     const width = Math.max(1, container.clientWidth), height = Math.max(1, container.clientHeight);
     const changed = world.viewportWidth !== width || world.viewportHeight !== height;
     world.viewportWidth = width; world.viewportHeight = height;
