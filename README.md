@@ -147,6 +147,13 @@ hardware rendering performance. The [consensus results](docs/lessons/01-consensu
 [mission recovery results](docs/lessons/22-mission-recovery-results.md) and
 [shared-world results](docs/lessons/23-shared-world-mission-results.md) list the checks actually run and their limitations.
 
+## Production deployment
+
+The root Dockerfile builds the static website and serves it on port 8080.
+See the [Coolify deployment guide](docs/deployment.md) for HTTPS, data lifetime,
+verification and updates after a push. The hosted site needs no database or
+persistent application volume; lesson recordings are included in the build.
+
 ## First workshop: distributed average consensus
 
 The algorithm is **distributed average consensus**, implemented as linear
