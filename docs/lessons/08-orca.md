@@ -13,6 +13,36 @@ goals. The [pathfinding lesson](05-pathfinding.md) answers a different question:
 how to search for a route through a known map. This lesson has no walls or route
 search; it studies the next local velocity.
 
+## Reading structure
+
+The opening compares actual ORCA trajectories under a 2 s horizon. The offset
+crossing arrives with 3/3 agents at 10.55 s. The symmetric head-on pair reaches
+the 40 s budget with 0/2 arrived. Both minimum swept physical gaps round to
+0.020 m. The drawings share a scale and show final agent disks, goal crosses
+and sampled model trajectory points. These are deterministic browser-model
+results, not recordings of external execution or a general safety claim.
+
+Four illustrated questions group the five existing reference presets:
+ORCA/APF/direct on the crossing, the horizon, symmetry, and missing peer
+observations. The horizon action starts a paused ORCA crossing at 0.5 s;
+all five reference presets retain 2 s. Each action preserves the selected
+agent when it exists, as other configuration changes do.
+
+The worked velocity example shows A1 at the displayed 3.50 s boundary of the
+default crossing. Its last applied decision used the 3.45 s snapshot:
+preferred velocity `(1.000, 0.018) m/s`, chosen command `(0.902, -0.058) m/s`,
+rounded to three decimals. These are velocity components, not map coordinates.
+The live inspector retains the exact input pose, velocity, constraints and
+decision timestamp so readers can reproduce the example.
+
+Method assumptions, reference results and the technical explanation use native
+disclosures. Static diagrams, exercises and source links remain readable
+without JavaScript. With JavaScript, fragment links reveal containing details
+without changing the configuration, observer, prepared/applied decision or step.
+The map and velocity plot resize independently of the simulation. The closing
+link introduces distributed task bundles and names its consensus/task-allocation
+prerequisites; it does not imply that ORCA performs task assignment.
+
 ## Method profile
 
 | Aspect | Implemented choice | Meaning |
@@ -47,7 +77,7 @@ Positions and goals are in metres. Every initial velocity is zero.
 | Goal attraction gain | 0.6 s⁻¹ | Common preferred motion rule. |
 | APF peer gain | 0.02 m⁴/s | Same inverse-clearance repulsion equation as lesson 2. |
 | APF influence range | 0.7 m surface clearance | Peers outside this range contribute no repulsion. |
-| ORCA horizon | Default 2 s | UI choices 0.5, 1, 2 and 4 s; model accepts 0.25–5 s. |
+| ORCA horizon | Default 2 s | UI choices 0.25, 0.5, 1, 2, 4 and 5 s; model accepts 0.25–5 s. |
 
 The observation model supplies all peer external states in sensed scenarios.
 APF uses their positions only, with finite-range repulsion; ORCA also uses

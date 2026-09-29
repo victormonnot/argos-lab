@@ -99,7 +99,7 @@ experiment or rewinds a recording.
 `src/site/shell.css` styles the common navigation. `src/site/site.css` styles the
 home and common editorial elements; `src/site/catalog.css` adds the catalog's
 layout. Pearl surfaces, graphite text and steel-blue accents frame discovery.
-Workshops 01–07 share `src/lesson.css`: a worked example, experiment,
+Workshops 01–08 share `src/lesson.css`: a worked example, experiment,
 illustrated questions and optional technical explanations. Their renderers and
 workshop-specific styles remain separate. The stylesheet is linked from HTML
 so reading does not depend on the experiment's JavaScript. Native disclosures
@@ -124,6 +124,13 @@ questions compare sharing, deduplication, Covariance Intersection and link loss.
 Distinct estimate shapes and offset labels preserve the exact positions and
 covariance contours when estimates converge. Packet contents and evaluator
 provenance remain separate, and opening explanations never advances a round.
+Workshop 08 uses `src/orca.css` with its own light map, 3D view and velocity
+diagram. Actual crossing and head-on trajectories introduce the difference
+between separation and arrival. Four illustrated questions retain the five
+reference cases and add a shortcut to the existing 0.5 s horizon setting.
+Physical disk footprints, goal markers and preferred/chosen velocity vectors
+remain distinct. Reading disclosures, resizing or inspecting another agent
+does not advance motion or recompute a decision from a different snapshot.
 Fonts are served locally with their [license notices](../public/fonts/README.md).
 The home page has a static illustration and direct thematic links when its
 canvas cannot run. It has no automatic animation or background simulation.

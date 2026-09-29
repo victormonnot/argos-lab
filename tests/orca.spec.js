@@ -7,6 +7,22 @@ const snapshot = async (page) => ({
   clearance: await page.locator('#orca-clearance').textContent(),
   arrived: await page.locator('#orca-arrived').textContent(),
 });
+const readingSnapshot = async (page) => ({
+  ...await snapshot(page),
+  method: await page.locator('#orca-algorithm').inputValue(),
+  scenario: await page.locator('#orca-scenario').inputValue(),
+  horizon: await page.locator('#orca-horizon').inputValue(),
+  observer: await page.locator('#orca-observer').inputValue(),
+  speed: await page.locator('#orca-speed').inputValue(),
+  time: await page.locator('#orca-time').textContent(),
+  status: await page.locator('#orca-status').textContent(),
+  outcome: await page.locator('#orca-outcome').textContent(),
+  decision: await page.locator('#orca-decision-note').textContent(),
+  decisionValues: await page.locator('#orca-agent-details').innerHTML(),
+  constraints: await page.locator('#orca-constraints').innerHTML(),
+  feasibility: await page.locator('#orca-feasibility').textContent(),
+  chosen: await page.locator('[data-orca-chosen]').getAttribute('data-velocity'),
+});
 async function freezeClock(page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
@@ -19,7 +35,7 @@ test.beforeEach(async ({ page }) => {
 test.afterEach(async ({ page }) => expect(browserErrors.get(page)).toEqual([]));
 
 test('named ORCA rule exposes prepared and applied velocity decisions, then verifies arrival', async ({ page }) => {
-  await expect(page.locator('h1')).toHaveText('Optimal Reciprocal Collision Avoidance.');
+  await expect(page.locator('h1')).toHaveText('Reciprocal avoidance.');
   await expect(page.locator('#orca-status')).toHaveText('Paused');
   await expect(page.locator('[data-orca-agent]')).toHaveCount(3);
   await expect(page.locator('#orca-viewport canvas')).toHaveCount(0);
@@ -92,6 +108,17 @@ test('horizon starts a fresh paused run, reset replays exactly, reference cases 
   await expect(page.locator('[data-reference-case="orca-head-on"]')).toContainText('Time budget exhausted');
   await expect(page.locator('[data-reference-case="orca-blind"]')).toContainText('Collision detected');
   expect(await snapshot(page)).toEqual(short);
+  await page.locator('[data-orca-case="orca-head-on"]').click();
+  await page.locator('#orca-algorithm').selectOption('apf');
+  await page.locator('#orca-step').click();
+  await page.locator('#orca-short-horizon').click();
+  await expect(page.locator('#orca-algorithm')).toHaveValue('orca');
+  await expect(page.locator('#orca-scenario')).toHaveValue('crossing');
+  await expect(page.locator('#orca-horizon')).toHaveValue('0.5');
+  await expect(page.locator('#orca-step-count')).toHaveText('0');
+  await expect(page.locator('#orca-status')).toHaveText('Paused');
+  await page.locator('#orca-step').click();
+  expect(await snapshot(page)).toEqual(short);
 });
 
 test('playback rates, observer and linked 3D camera preserve the same numerical run', async ({ page }) => {
@@ -148,4 +175,111 @@ test('keyboard selection, mobile layout, navigation and unavailable WebGL keep t
   await page.reload(); await page.locator('#orca-3d').click(); await expect(page.locator('#orca-viewport')).toContainText('3D is unavailable');
   await page.locator('#orca-2d').click(); await page.locator('#orca-finish').click();
   await expect(page.locator('#orca-status')).toHaveText('All agents arrived');
+});
+
+test('reading disclosures preserves prepared and applied decisions, constraints and configuration', async ({ page }) => {
+  await page.locator('#orca-scenario').selectOption('headOn');
+  await page.locator('#orca-horizon').selectOption('4');
+  await page.locator('#orca-observer').selectOption('1');
+  await page.locator('#orca-speed').selectOption('10');
+
+  for (const phase of ['prepared', 'applied']) {
+    if (phase === 'applied') await page.locator('#orca-step').click();
+    await expect(page.locator('#orca-step-count')).toHaveText(phase === 'prepared' ? '0' : '1');
+    await expect(page.locator('#orca-decision-note')).toContainText(phase === 'prepared' ? 'prepared decision' : 'last applied decision used t = 0.00 s');
+    await expect(page.locator('#orca-constraints tr')).toHaveCount(1);
+    const beforeReading = await readingSnapshot(page);
+    expect(beforeReading.scenario).toBe('headOn');
+    expect(beforeReading.horizon).toBe('4');
+    expect(beforeReading.observer).toBe('1');
+    expect(beforeReading.speed).toBe('10');
+    expect(beforeReading.status).toBe('Paused');
+    if (phase === 'prepared') expect(beforeReading.state[1]).toBe('0,0');
+    else expect(beforeReading.state[1]).not.toBe('0,0');
+
+    for (const id of ['orca-method-details', 'orca-model-details']) {
+      const disclosure = page.locator(`#${id}`);
+      await expect(disclosure).not.toHaveAttribute('open', '');
+      await disclosure.locator(':scope > summary').focus();
+      await page.keyboard.press('Enter');
+      await expect(disclosure).toHaveAttribute('open', '');
+      expect(await readingSnapshot(page)).toEqual(beforeReading);
+      await page.keyboard.press('Space');
+      await expect(disclosure).not.toHaveAttribute('open', '');
+      expect(await readingSnapshot(page)).toEqual(beforeReading);
+    }
+  }
+  const applied = await readingSnapshot(page);
+  await page.locator('#orca-reset').click();
+  await page.locator('#orca-step').click();
+  expect(await readingSnapshot(page)).toEqual(applied);
+  await page.locator('#orca-step').click();
+  await expect(page.locator('#orca-step-count')).toHaveText('2');
+});
+
+test('bookmarks reveal independent comparisons and the velocity rule without replacing a run', async ({ page }) => {
+  await page.goto('/orca/#orca-reference-table');
+  await expect(page.locator('#orca-comparisons')).toHaveAttribute('open', '');
+  await expect(page.locator('#orca-reference-table')).toBeVisible();
+  await expect(page.locator('#orca-reference-table tr')).toHaveCount(5);
+  await expect(page.locator('[data-reference-case="orca-crossing"]')).toContainText('All agents arrived');
+  await expect(page.locator('[data-reference-case="orca-head-on"]')).toContainText('Time budget exhausted');
+
+  await page.locator('#orca-horizon').selectOption('0.5');
+  await page.locator('#orca-observer').selectOption('2');
+  await page.locator('#orca-step').click();
+  const beforeHashChange = await readingSnapshot(page);
+  expect(beforeHashChange.step).toBe('1');
+  expect(beforeHashChange.horizon).toBe('0.5');
+  expect(beforeHashChange.observer).toBe('2');
+  for (const [anchor, disclosure] of [['orca-profile-title', 'orca-method-details'], ['orca-equation', 'orca-model-details']]) {
+    await page.evaluate((id) => { window.location.hash = id; }, anchor);
+    await expect(page.locator(`#${disclosure}`)).toHaveAttribute('open', '');
+    await expect(page.locator(`#${anchor}`)).toBeVisible();
+    expect(await readingSnapshot(page)).toEqual(beforeHashChange);
+  }
+  await page.reload();
+  await expect(page.locator('#orca-model-details')).toHaveAttribute('open', '');
+  await expect(page.locator('#orca-equation')).toBeVisible();
+  await expect(page.locator('#orca-step-count')).toHaveText('0');
+  await expect(page.locator('#orca-algorithm')).toHaveValue('orca');
+  await expect(page.locator('#orca-scenario')).toHaveValue('crossing');
+  await expect(page.locator('#orca-horizon')).toHaveValue('2');
+  await expect(page.locator('#orca-observer')).toHaveValue('0');
+});
+
+test('the static lesson, guided cases and primary source remain readable on mobile without JavaScript', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL, viewport: { width: 390, height: 844 } });
+  try {
+    const page = await context.newPage();
+    const stylesheets = [];
+    page.on('response', (response) => {
+      if (response.request().resourceType() === 'stylesheet' && response.ok()) stylesheets.push(response.url());
+    });
+    await page.goto('/orca/');
+    await expect(page.locator('h1')).toHaveText('Reciprocal avoidance.');
+    await expect(page.locator('.no-script-note')).toBeVisible();
+    await expect(page.locator('.no-script-note')).toContainText('JavaScript');
+    for (const name of ['lesson', 'orca']) {
+      expect(stylesheets.some((url) => new URL(url).pathname === `/src/${name}.css`)).toBe(true);
+    }
+    await expect(page.locator('#orca-presets > article')).toHaveCount(4);
+    await expect(page.locator('[data-orca-case]')).toHaveCount(5);
+    for (const id of ['orca-crossing', 'apf-crossing', 'direct-crossing', 'orca-head-on', 'orca-blind']) {
+      await expect(page.locator(`[data-orca-case="${id}"]`)).toBeVisible();
+    }
+    await expect(page.locator('#orca-short-horizon')).toBeVisible();
+    await page.locator('#orca-method-details > summary').click();
+    await expect(page.locator('#orca-method-details')).toHaveAttribute('open', '');
+    await expect(page.locator('#orca-method-details')).toContainText('ORCA / reciprocal disk agents');
+    await page.locator('#orca-model-details > summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#orca-equation')).toBeVisible();
+    await expect(page.locator('#orca-equation')).toContainText('qᵢⱼ = vᵢ + ½uᵢⱼ');
+    await expect(page.locator('#orca-equation')).toContainText('pᵢ next = pᵢ + Δt vᵢ*');
+    await expect(page.locator('#orca-method .reference a')).toHaveAttribute('href', 'https://gamma-web.iacs.umd.edu/ORCA/');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  } finally {
+    await context.close();
+  }
 });

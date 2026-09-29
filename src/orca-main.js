@@ -1,6 +1,3 @@
-import './style.css';
-import './mission.css';
-import './orca.css';
 import { DT, MAX_STEPS, RADIUS, SAFETY_PADDING, MAX_SPEED, GOAL_RADIUS, METHODS, SCENARIOS, PRESETS, createRun, stepRun, runToEnd, referenceComparisons } from './orca-model.js';
 import { createOrcaView, drawVelocitySpace } from './orca-view.js';
 
@@ -86,8 +83,19 @@ function render() {
 
 for (const [id, label] of Object.entries(METHODS)) $('#orca-algorithm').append(Object.assign(document.createElement('option'), { value: id, textContent: label }));
 for (const [id, label] of Object.entries(SCENARIOS)) $('#orca-scenario').append(Object.assign(document.createElement('option'), { value: id, textContent: label }));
-$('#orca-presets').innerHTML = PRESETS.map((preset, index) => `<article><span class="exercise-number">${String(index + 1).padStart(2, '0')} / ${preset.config.scenario === 'crossing' ? 'COMPARE THE RULE' : 'TEST AN ASSUMPTION'}</span><h3>${preset.label}</h3><p>${preset.description}</p><button data-orca-case="${preset.id}">Load ${preset.label.toLowerCase()} ↗</button></article>`).join('');
-$('#orca-presets').addEventListener('click', (event) => { const button = event.target.closest('[data-orca-case]'); if (button) start(PRESETS.find((p) => p.id === button.dataset.orcaCase).config); });
+function revealExperiment() {
+  $('#orca-experiment').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
+}
+$('#orca-presets').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-orca-case]');
+  if (!button) return;
+  const preset = PRESETS.find((entry) => entry.id === button.dataset.orcaCase);
+  if (preset) { start(preset.config); revealExperiment(); }
+});
+$('#orca-short-horizon').addEventListener('click', () => {
+  start({ method: 'orca', scenario: 'crossing', horizon: 0.5 });
+  revealExperiment();
+});
 $('#orca-algorithm').addEventListener('change', () => start({ ...run.config, method: $('#orca-algorithm').value }));
 $('#orca-scenario').addEventListener('change', () => start({ ...run.config, scenario: $('#orca-scenario').value }));
 $('#orca-horizon').addEventListener('change', () => start({ ...run.config, horizon: Number($('#orca-horizon').value) }));
@@ -108,6 +116,38 @@ $('#orca-comparisons').addEventListener('toggle', () => {
   $('#orca-reference-table').innerHTML = referenceComparisons().map((result) => `<tr data-reference-case="${result.id}"><td>${result.label}</td><td>${result.config.method.toUpperCase()}${result.config.method === 'orca' ? ` / ${result.config.horizon} s` : ' / n/a'}</td><td>${outcomeNames[result.status]}</td><td>${result.time.toFixed(2)} s</td><td>${result.arrived} / ${result.config.scenario === 'headOn' ? 2 : 3}</td><td>${number(result.minClearance, 6)} m</td><td>${result.infeasibleSteps} steps</td></tr>`).join('');
   comparisonsReady = true;
 });
-window.addEventListener('pagehide', () => { stop(); view.dispose(); });
+// Reading explanations and resizing only change the presentation.
+function revealFragment() {
+  let id;
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+  const target = document.getElementById(id);
+  if (!target) return;
+  let opened = false;
+  for (let ancestor = target; ancestor; ancestor = ancestor.parentElement) {
+    if (ancestor instanceof HTMLDetailsElement && !ancestor.open) {
+      ancestor.open = true;
+      opened = true;
+    }
+  }
+  if (opened) requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+}
+let plotWidth = Math.round($('#orca-velocity-space').clientWidth), plotFrame = null;
+const plotResize = new ResizeObserver(() => {
+  const width = Math.round($('#orca-velocity-space').clientWidth);
+  if (width !== plotWidth) {
+    plotWidth = width;
+    cancelAnimationFrame(plotFrame);
+    plotFrame = requestAnimationFrame(() => drawVelocitySpace($('#orca-velocity-space'), run.agents[selected], run.config.method));
+  }
+});
+plotResize.observe($('#orca-velocity-space'));
+window.addEventListener('hashchange', revealFragment);
+function dispose() {
+  stop(); view.dispose(); plotResize.disconnect(); cancelAnimationFrame(plotFrame);
+  window.removeEventListener('hashchange', revealFragment);
+}
+window.addEventListener('pagehide', dispose);
+if (import.meta.hot) import.meta.hot.dispose(dispose);
 window.addEventListener('pageshow', (event) => { if (event.persisted) window.location.reload(); });
 start(run.config);
+revealFragment();

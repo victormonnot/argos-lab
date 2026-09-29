@@ -407,6 +407,12 @@ head-on case to explore lack of progress, then remove peer sensing to expose
 the information the avoidance rule needs. Change the prediction horizon and
 repeat the experiment.
 
+The opening compares actual crossing and symmetric head-on trajectories:
+remaining separated and reaching every goal are distinct outcomes. Four
+illustrated questions lead into the experiment, including a short-horizon
+comparison. Assumptions, reference runs and equations expand without changing
+the active run or the inspected decision.
+
 Both views observe the same synchronous planar kinematics. The agents have exact
 self-position and, when sensing is available, exact peer positions and velocities;
 they exchange no messages. Reciprocal half-responsibility, feasible constraints
